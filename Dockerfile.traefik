@@ -1,0 +1,9 @@
+FROM traefik:v2.9
+
+COPY traefik-entrypoint.sh /app/traefik-entrypoint.sh
+
+RUN sed -i 's/\r$//' /app/traefik-entrypoint.sh
+
+RUN chmod +x /app/traefik-entrypoint.sh
+
+ENTRYPOINT ["/app/traefik-entrypoint.sh"]

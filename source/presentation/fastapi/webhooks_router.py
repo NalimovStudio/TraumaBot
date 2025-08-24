@@ -21,8 +21,6 @@ async def yookassa_webhook(
 """@webhooks_router.post("/telegram")
 async def telegram_webhook(
     update: Update,
-    dp: Dispatcher = FromDishka(),
-    bot: Bot = FromDishka()
 ):
     try:
         await dp.process_update(update)

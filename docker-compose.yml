@@ -5,9 +5,9 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_DB: psychoAI_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ${DB_PATH}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "0.0.0.0:1488:5432"
     volumes:
@@ -17,6 +17,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - traefik_network
+      - default
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
   redis:
     image: redis:7-alpine
     restart: always
@@ -30,48 +36,19 @@ services:
       interval: 5s
       timeout: 30s
       retries: 5
-  bot:
-    build:
-      context: .
-      network: host
-    container_name: psychoAI_bot
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: python -m source.main.bot
-    volumes:
-      - ./:/source
-  traefik:
-    image: traefik:v2.9
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.letsencrypt.acme.email=d.vilkinsov@yandex.ru
-      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik_acme:/acme.json
-    entrypoint: /traefik-entrypoint.sh
     networks:
       - traefik_network
-  web:
+      - default
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+  fastapi:
     build:
       context: .
-    container_name: psychoAI_web
+      dockerfile: Dockerfile
+      network: host
+    image: trauma_image:latest
+    container_name: fastapi
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -81,12 +58,16 @@ services:
       - "traefik.http.routers.psychoai-web.tls.domains[0].main=xn--80aa9aoji.xn--p1ai"
       - "traefik.http.services.psychoai-web.loadbalancer.server.port=8000"
       # Редирект с HTTP на HTTPS
-      - "traefik.http.routers.psychoai-web-http.rule=Host(`xn--80aa9aoji.xn--p1ai`)"
+      - "traefik.http.routers.psychoai-web-http.rule=Host(`xn--80aa9aoji.xn--p1ai`) && !PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.psychoai-web-http.entrypoints=web"
       - "traefik.http.routers.psychoai-web-http.middlewares=redirect-to-https"
       # Middleware для редиректа
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      # ACME
+      - "traefik.http.routers.acme.rule=Host(`xn--80aa9aoji.xn--p1ai`) && PathPrefix(`/.well-known/acme-challenge/`)"
+      - "traefik.http.routers.acme.entrypoints=web"
+      - "traefik.http.routers.acme.priority=1000"
     env_file:
       - .env
     depends_on:
@@ -94,12 +75,68 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn asgi:app --host 0.0.0.0 --port 8000 --workers 2 --app-dir /TraumaBot
+    command: poetry run uvicorn asgi:app --host 0.0.0.0 --port 8000 --workers 2
     volumes:
       - ./:/TraumaBot
     networks:
       - traefik_network
       - default
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+  bot:
+    build:
+      context: .
+      network: host
+      dockerfile: Dockerfile
+    image: trauma_image:latest
+    container_name: bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: poetry run python -m source.main.bot
+    volumes:
+      - ./:/source
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - traefik_network
+      - default
+  traefik:
+    build:
+      context: .
+      dockerfile: Dockerfile.traefik
+    image: traefik:v2.9
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --log.level=DEBUG
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=d.vilkinsov@yandex.ru
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_acme:/acme
+    networks:
+      - traefik_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 volumes:
   pg_data:
