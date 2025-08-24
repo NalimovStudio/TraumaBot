@@ -46,3 +46,4 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV VIRTUAL_ENV="/opt/venv"
 
 COPY . .
+RUN chmod +x /traefik-entrypoint.sh

@@ -8011,3 +8011,35 @@
 {"asctime": "2025-08-22 23:53:36,672", "levelname": "ERROR", "name": "aiogram.dispatcher", "message": "Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected"}
 {"asctime": "2025-08-22 23:53:36,673", "levelname": "WARNING", "name": "aiogram.dispatcher", "message": "Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 7560654495)"}
 {"asctime": "2025-08-22 23:53:36,879", "levelname": "INFO", "name": "aiogram.dispatcher", "message": "Polling stopped for bot @trauma_aibot id=7560654495 - '\u0422\u0440\u0430\u0443\u043c\u0430 - \u0418\u0418 \u041f\u0441\u0438\u0445\u043e\u043b\u043e\u0433'"}
+{"asctime": "2025-08-24 19:24:11,221", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 19:24:11,221", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 19:24:11,223", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 19:24:11,226", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 19:27:21,828", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-08-24 19:27:21,832", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-08-24 19:27:21,876", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-08-24 19:27:21,883", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-08-24 19:28:18,730", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 19:28:18,730", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 19:28:18,737", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 19:28:18,742", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 19:29:19,961", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-08-24 19:29:19,979", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-08-24 19:29:19,982", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-08-24 19:29:19,997", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-08-24 19:29:49,006", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 19:29:49,006", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 19:29:49,014", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 19:29:49,027", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 19:40:02,498", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-08-24 19:40:02,625", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-08-24 19:40:02,645", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-08-24 19:40:02,687", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-08-24 22:56:38,428", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 22:56:38,431", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 22:56:38,435", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 22:56:38,477", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 22:57:17,352", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 22:57:17,355", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
+{"asctime": "2025-08-24 22:57:17,379", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-08-24 22:57:17,373", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}

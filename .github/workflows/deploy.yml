@@ -2,7 +2,7 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev_arsen ]
   workflow_dispatch:
 
 jobs:
@@ -142,8 +142,15 @@ jobs:
             TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
             ASSISTANT_API_KEY=${{ secrets.ASSISTANT_API_KEY }}
           
+            YOOKASSA_WEBHOOK_URL=${{ secrets.YOOKASSA_WEBHOOK_URL }}
+            WEB_HOST=${{ secrets.WEB_HOST }}
+            WEB_PORT=${{ secrets.WEB_PORT }}
+            DOMAIN=${{ secrets.DOMAIN }}
+            TELEGRAM_WEBHOOK_URL=${{ secrets.TELEGRAM_WEBHOOK_URL }}
+          
             ENVIRONMENT=production
             LOG_LEVEL=INFO
+            ENV_EOF
       
       - name: Deploy with Docker Compose
         run: |

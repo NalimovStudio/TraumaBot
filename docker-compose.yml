@@ -45,8 +45,67 @@ services:
         condition: service_healthy
     command: python -m source.main.bot
     volumes:
-      - ./:/source  # Монтируем код бота
+      - ./:/source
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=d.vilkinsov@yandex.ru
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_acme:/acme.json
+    entrypoint: /traefik-entrypoint.sh
+    networks:
+      - traefik_network
+  web:
+    build:
+      context: .
+    container_name: psychoAI_web
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.psychoai-web.rule=Host(`xn--80aa9aoji.xn--p1ai`)"
+      - "traefik.http.routers.psychoai-web.entrypoints=websecure"
+      - "traefik.http.routers.psychoai-web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.psychoai-web.tls.domains[0].main=xn--80aa9aoji.xn--p1ai"
+      - "traefik.http.services.psychoai-web.loadbalancer.server.port=8000"
+      # Редирект с HTTP на HTTPS
+      - "traefik.http.routers.psychoai-web-http.rule=Host(`xn--80aa9aoji.xn--p1ai`)"
+      - "traefik.http.routers.psychoai-web-http.entrypoints=web"
+      - "traefik.http.routers.psychoai-web-http.middlewares=redirect-to-https"
+      # Middleware для редиректа
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn asgi:app --host 0.0.0.0 --port 8000 --workers 2 --app-dir /TraumaBot
+    volumes:
+      - ./:/TraumaBot
+    networks:
+      - traefik_network
+      - default
 
 volumes:
   pg_data:
   redis_data:
+  traefik_acme:
+
+networks:
+  traefik_network:
+    driver: bridge
