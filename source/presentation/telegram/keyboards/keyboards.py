@@ -86,7 +86,23 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
 
 
 def get_help_keyboard() -> InlineKeyboardMarkup:
-    pass
+    """Клавиатура для меню помощи."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.HELP_START_DIALOG,
+                    callback_data=HelpCallback(menu="start_dialog").pack(),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.HELP_SUPPORT_METHODS,
+                    callback_data=HelpCallback(menu="methods").pack(),
+                )
+            ],
+        ]
+    )
 
 
 def get_support_methods_keyboard() -> InlineKeyboardMarkup:

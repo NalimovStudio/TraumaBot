@@ -12,7 +12,7 @@ from aiogram.types import User as TelegramUser
 
 from source.application.user import CreateUser
 from source.core.schemas.user_schema import UserSchemaRequest
-from source.application.user.get_by_id import GetUserById
+from source.application.user.get_by_id import GetUserSchemaById
 
 
 class LoadUserMiddleware(BaseMiddleware):
@@ -26,7 +26,7 @@ class LoadUserMiddleware(BaseMiddleware):
             if data.get("event_from_user"):
                 dishka: AsyncContainer = data[CONTAINER_NAME]
                 create_user: CreateUser = await dishka.get(CreateUser)
-                get_user: GetUserById = await dishka.get(GetUserById)
+                get_user: GetUserSchemaById = await dishka.get(GetUserSchemaById)
                 aiogram_user: TelegramUser = data["event_from_user"]
                 user: UserSchema = await create_user(
                     UserSchemaRequest(
@@ -34,9 +34,12 @@ class LoadUserMiddleware(BaseMiddleware):
                         username=aiogram_user.username
                     )
                 )
+
                 if not user:
                     user: UserSchema = await get_user(str(aiogram_user.id))
+
                 data["user"] = user
+                
                 return await handler(event, data)
         except Exception as exc:
             pass

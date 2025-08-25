@@ -25,3 +25,8 @@ class PaymentRepository(BaseRepository):
 
         model: PaymentLogs = result.scalar_one_or_none()
         return model.get_schema()
+    
+    async def get_model_by_purchase_id(self, purchase_id: str) -> PaymentLogs | None:
+        stmt: Select = select(self.model).where(self.model.purchase_id == purchase_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()

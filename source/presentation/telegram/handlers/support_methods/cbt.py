@@ -3,6 +3,7 @@ import logging
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
+from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, Message
 from dishka.integrations.aiogram import FromDishka
 
@@ -14,6 +15,8 @@ from source.presentation.telegram.callbacks.method_callbacks import MethodCallba
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
 from source.presentation.telegram.utils import send_long_message
+from source.presentation.telegram.utils import convert_markdown_to_html
+
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -86,7 +89,7 @@ async def handle_cbt_s3_thought(
         ai_message = ContextMessage(role="assistant", message=ai_response_text)
         await history.add_message_to_history(user_id, context_scope, ai_message)
 
-        await send_long_message(message, ai_response_text, bot)
+        await send_long_message(message, convert_markdown_to_html(ai_response_text), bot)
 
     except Exception as e:
         logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")

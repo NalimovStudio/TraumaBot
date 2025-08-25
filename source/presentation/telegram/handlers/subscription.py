@@ -13,8 +13,10 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from dishka.integrations.aiogram import FromDishka
-from source.core.schemas.user_schema import UserSchema
 from sqlalchemy import func
+
+from source.core.schemas.user_schema import UserSchema
+from source.core.enum import SubscriptionType
 
 
 from source.core.lexicon.bot import (
@@ -118,7 +120,8 @@ async def process_contact(message: Message, state: FSMContext, payment_service: 
         months_sub=data['months'],
         telegram_id=data['telegram_id'],
         username=data['username'],
-        customer_contact=customer_contact 
+        customer_contact=customer_contact,
+        subscription=SubscriptionType.PRO if data['sub_type'] == "pro" else SubscriptionType.DEFAULT
     )
 
     payment_url = payment.link

@@ -1,67 +1,41 @@
-import asyncio
-from typing import AsyncGenerator
-
+# conftest.py
 import pytest
-from source.infrastructure.config import get_database_config
-from source.infrastructure.dishka import ConfigProvider
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
+from unittest.mock import AsyncMock, MagicMock
 
-from source.core.enum import SubscriptionType, UserType
-from source.core.schemas.user_schema import UserSchema
-from source.infrastructure.database.repository.user_repo import UserRepository
+from source.core.enum import UserType, SubscriptionType
+from source.infrastructure.database.models.user_model import User
 
 
-# Фикстура для event loop
 @pytest.fixture(scope="session")
 def event_loop():
+    """Фикстура для event loop"""
+    import asyncio
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
 
 
-@pytest.fixture(scope="session")
-async def test_engine():
-    test_db_url = get_database_config(env=ConfigProvider().get_env()).build_connection_url()
-
-    test_engine = create_async_engine(
-        test_db_url,
-        echo=True,
-        poolclass=NullPool,  # Используем NullPool для тестов
-    )
-
-    yield test_engine
-
-    await test_engine.dispose()
+@pytest.fixture
+def mock_session():
+    """Мок сессии базы данных"""
+    session = AsyncMock()
+    session.commit = AsyncMock()
+    session.rollback = AsyncMock()
+    session.close = AsyncMock()
+    return session
 
 
 @pytest.fixture
-async def session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    async with async_sessionmaker(
-            test_engine,
-            expire_on_commit=False,
-            autoflush=False
-    )() as test_session:
-        try:
-            yield test_session
-        finally:
-            await test_session.rollback()
-
-            # Очищаем все таблицы. Важно.
-            async with test_engine.begin() as conn:
-                await conn.run_sync(lambda sync_conn: sync_conn.execute(text("TRUNCATE TABLE users CASCADE")))
-
-            await test_session.close()
-
-
-@pytest.fixture(scope="function")
-async def user_repo(session: AsyncSession) -> UserRepository:
-    return UserRepository(session=session)
+def user_repo(mock_session):
+    """Репозиторий с моковой сессией"""
+    from source.infrastructure.database.repository.user_repo import UserRepository
+    return UserRepository(session=mock_session)
 
 
 @pytest.fixture
-async def user_schema() -> UserSchema:
+def user_schema():
+    """Фикстура пользователя"""
+    from source.core.schemas.user_schema import UserSchema
     return UserSchema(
         telegram_id="1488",
         username="sperma",
@@ -69,3 +43,12 @@ async def user_schema() -> UserSchema:
         user_type=UserType.USER,
         subscription=SubscriptionType.FREE
     )
+
+
+@pytest.fixture
+def mock_user_model(user_schema):
+    """Мок модели User с методом get_schema"""
+    mock_model = MagicMock(spec=User)
+    mock_model.id = user_schema.id # Пример, если id нужен для refresh или других операций
+    mock_model.get_schema.return_value = user_schema
+    return mock_model

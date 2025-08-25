@@ -17,6 +17,8 @@ from source.presentation.telegram.keyboards.keyboards import (
 )
 from source.presentation.telegram.states.user_states import SupportStates
 from source.presentation.telegram.utils import send_long_message
+from source.presentation.telegram.utils import convert_markdown_to_html
+
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -92,7 +94,7 @@ async def handle_calming_talk(
         ai_message_context = ContextMessage(role="assistant", message=ai_response_text)
         await history.add_message_to_history(user_id, context_scope, ai_message_context)
 
-        await send_long_message(message, ai_response_text, bot, keyboard=get_back_to_menu_keyboard())
+        await send_long_message(message, convert_markdown_to_html(ai_response_text), bot, keyboard=get_back_to_menu_keyboard())
 
     except Exception as e:
         logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")

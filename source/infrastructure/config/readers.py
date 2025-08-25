@@ -23,7 +23,6 @@ def get_redis_config(env: Env) -> RedisConfig:
         port=env.int("REDIS_PORT"),
         host=env.str("REDIS_HOST"),
         password=env.str("REDIS_PASSWORD", None),
-        username=env.str("REDIS_USERNAME", None),
         database=env.str("REDIS_DATABASE", "0")
     )
 

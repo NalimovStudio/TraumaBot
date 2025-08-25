@@ -1,0 +1,7 @@
+#[ History service ]
+HISTORY_MAX_LEN=10
+
+# [Subscription Limit ]
+
+LIMIT_MESSAGE_FREE=10
+LIMIT_MESSAGE_STANDART=1000

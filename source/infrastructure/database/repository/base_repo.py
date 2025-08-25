@@ -1,6 +1,8 @@
 from typing import TypeVar, Generic, Type, Optional, Sequence
 from uuid import UUID
 
+from psycopg2 import IntegrityError
+
 from pydantic import BaseModel as BaseModelSchema
 from sqlalchemy import select, update, delete, Delete, Result
 from sqlalchemy.exc import SQLAlchemyError
@@ -77,8 +79,17 @@ class BaseRepository(Generic[M]):
 
     async def create(self, model_schema: S) -> S:
         """Создание модели model: M"""
-        model: M = self.model.from_pydantic(schema=model_schema)
-        self.session.add(model)
-        await self.session.commit()
-        await self.session.refresh(model)
-        return model.get_schema()
+        try:
+            model: M = self.model.from_pydantic(schema=model_schema)
+            self.session.add(model)
+            await self.session.refresh(model)
+            return model.get_schema()
+        except IntegrityError:
+            await self.session.rollback()
+            raise
+        except Exception as e:
+            await self.session.rollback()
+            raise e
+
+    async def merge(self, model: M) -> None:
+        await self.session.merge(model)
