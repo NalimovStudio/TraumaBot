@@ -4,6 +4,7 @@ services:
   db:
     image: postgres:15
     restart: always
+    container_name: postgres
     environment:
       POSTGRES_DB: ${DB_PATH}
       POSTGRES_USER: ${DB_USER}
@@ -68,6 +69,8 @@ services:
       - "traefik.http.routers.acme.rule=Host(`xn--80aa9aoji.xn--p1ai`) && PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.acme.entrypoints=web"
       - "traefik.http.routers.acme.priority=1000"
+      # docker network
+      - "traefik.docker.network=traumabot_traefik_network"
     env_file:
       - .env
     depends_on:
@@ -75,7 +78,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: poetry run uvicorn asgi:app --host 0.0.0.0 --port 8000 --workers 2
+    command: >
+      sh -c "poetry run uvicorn asgi:app --host 0.0.0.0 --port 8000 --workers 1"
     volumes:
       - ./:/TraumaBot
     networks:
@@ -84,30 +88,12 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
-  bot:
-    build:
-      context: .
-      network: host
-      dockerfile: Dockerfile
-    image: trauma_image:latest
-    container_name: bot
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: poetry run python -m source.main.bot
-    volumes:
-      - ./:/source
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    networks:
-      - traefik_network
-      - default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
   traefik:
     build:
       context: .
@@ -134,6 +120,7 @@ services:
       - traefik_acme:/acme
     networks:
       - traefik_network
+      - default
     dns:
       - 8.8.8.8
       - 1.1.1.1

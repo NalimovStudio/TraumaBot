@@ -151,6 +151,10 @@ jobs:
             ENVIRONMENT=production
             LOG_LEVEL=INFO
             ENV_EOF
+
+      - name: Clean old images
+        run: echo "Running Docker cleanup..."
+          ./cleanup_docker.sh
       
       - name: Deploy with Docker Compose
         run: |
