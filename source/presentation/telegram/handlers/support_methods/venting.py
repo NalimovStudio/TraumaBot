@@ -29,7 +29,7 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     await query.answer()
 
 @router.message(Command("stop"), SupportStates.VENTING)
-async def handle_stop_venting(message: Message, state: FSMContext, data: dict):
+async def handle_stop_venting(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     
@@ -46,7 +46,7 @@ async def handle_stop_venting(message: Message, state: FSMContext, data: dict):
     )
 
 @router.message(SupportStates.VENTING)
-async def handle_venting_message(message: Message, state: FSMContext, data: dict):
+async def handle_venting_message(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)

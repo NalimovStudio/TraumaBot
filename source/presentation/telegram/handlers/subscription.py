@@ -62,7 +62,7 @@ async def handle_pro_sub_menu(query: CallbackQuery):
     await query.answer()
 
 @router.callback_query(SubscriptionCallback.filter(F.menu == "buy"))
-async def handle_buy_subscription(query: CallbackQuery, callback_data: SubscriptionCallback, user: UserSchema, state: FSMContext, data: dict):
+async def handle_buy_subscription(query: CallbackQuery, callback_data: SubscriptionCallback, user: UserSchema, state: FSMContext, **data):
     # No changes needed here as PaymentService is not used directly
     sub_type = "Стандарт" if callback_data.sub_type == "standard" else "Pro"
     months = callback_data.months
@@ -93,7 +93,7 @@ async def handle_buy_subscription(query: CallbackQuery, callback_data: Subscript
     await query.answer()
 
 @router.message(StateFilter(SupportStates.WAITING))
-async def process_contact(message: Message, state: FSMContext, data: dict):
+async def process_contact(message: Message, state: FSMContext, **data):
     # Manually get the container and the service
     container: AsyncContainer = data["dishka_container"]
     payment_service: PaymentService = await container.get(PaymentService)

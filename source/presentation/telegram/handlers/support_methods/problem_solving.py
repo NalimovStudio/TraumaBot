@@ -27,7 +27,7 @@ async def handle_problem_solving_method(query: CallbackQuery, state: FSMContext)
     await query.answer()
 
 @router.message(SupportStates.PROBLEM_S1_DEFINE)
-async def handle_ps_s1_define(message: Message, state: FSMContext, data: dict):
+async def handle_ps_s1_define(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     
@@ -40,7 +40,7 @@ async def handle_ps_s1_define(message: Message, state: FSMContext, data: dict):
     await message.answer(text)
 
 @router.message(SupportStates.PROBLEM_S2_GOAL)
-async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, data: dict):
+async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **data):
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
@@ -111,7 +111,7 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
     await query.answer()
 
 @router.message(SupportStates.PROBLEM_S4_CHOICE)
-async def handle_ps_s4_step(message: Message, state: FSMContext, data: dict):
+async def handle_ps_s4_step(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
 
@@ -124,7 +124,7 @@ async def handle_ps_s4_step(message: Message, state: FSMContext, data: dict):
     await message.answer(text)
 
 @router.message(SupportStates.PROBLEM_S5_PACT)
-async def handle_ps_s5_pact(message: Message, state: FSMContext, data: dict):
+async def handle_ps_s5_pact(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
 

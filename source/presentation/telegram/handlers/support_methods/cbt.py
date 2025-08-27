@@ -22,7 +22,7 @@ async def handle_cbt_method(query: CallbackQuery, state: FSMContext):
     await query.answer("Эта функция находится в разработке.", show_alert=True)
 
 @router.message(SupportStates.CBT_S1_SITUATION)
-async def handle_cbt_s1_situation(message: Message, state: FSMContext, data: dict):
+async def handle_cbt_s1_situation(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     
@@ -33,7 +33,7 @@ async def handle_cbt_s1_situation(message: Message, state: FSMContext, data: dic
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S2_EMOTIONS)
-async def handle_cbt_s2_emotions(message: Message, state: FSMContext, data: dict):
+async def handle_cbt_s2_emotions(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     
@@ -44,7 +44,7 @@ async def handle_cbt_s2_emotions(message: Message, state: FSMContext, data: dict
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S3_THOUGHT)
-async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, data: dict):
+async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, **data):
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
@@ -82,7 +82,7 @@ async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, d
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S4_DISTORTIONS)
-async def handle_cbt_s4_distortions(message: Message, state: FSMContext, data: dict):
+async def handle_cbt_s4_distortions(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     
@@ -93,7 +93,7 @@ async def handle_cbt_s4_distortions(message: Message, state: FSMContext, data: d
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S5_EVIDENCE)
-async def handle_cbt_s5_evidence(message: Message, state: FSMContext, data: dict):
+async def handle_cbt_s5_evidence(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     
@@ -104,7 +104,7 @@ async def handle_cbt_s5_evidence(message: Message, state: FSMContext, data: dict
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S6_ALTERNATIVE)
-async def handle_cbt_s6_alternative(message: Message, state: FSMContext, data: dict):
+async def handle_cbt_s6_alternative(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
 
@@ -115,7 +115,7 @@ async def handle_cbt_s6_alternative(message: Message, state: FSMContext, data: d
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S7_RERATING)
-async def handle_cbt_s7_rerating(message: Message, state: FSMContext, data: dict):
+async def handle_cbt_s7_rerating(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     

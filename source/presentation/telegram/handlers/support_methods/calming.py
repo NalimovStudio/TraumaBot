@@ -46,7 +46,7 @@ async def handle_calming_feedback(query: CallbackQuery, callback_data: CalmingCa
         await query.answer()
 
 @router.message(SupportStates.CALMING_TALK)
-async def handle_calming_talk(message: Message, state: FSMContext, bot: Bot, data: dict):
+async def handle_calming_talk(message: Message, state: FSMContext, bot: Bot, **data):
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
