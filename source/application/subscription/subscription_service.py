@@ -3,20 +3,21 @@ from dateutil.relativedelta import relativedelta
 
 from source.infrastructure.database.repository import UserRepository
 from source.infrastructure.database.models.user_model import User
-from source.application.user import GetUserById, MergeUser
+from source.application.user import MergeUser, GetUserSchemaById
 from source.application.subscription import SubscriptionServiceInterface
 from source.core.enum import SubscriptionType
+from source.core.schemas.user_schema import UserSchema
 
 from source.core.lexicon.rules import LIMIT_MESSAGE_FREE, LIMIT_MESSAGE_STANDART
 
 
 class SubscriptionService:
-    def __init__(self, get_by_id: GetUserById, merge: MergeUser):
+    def __init__(self, get_by_id: GetUserSchemaById, merge: MergeUser):
         self.get_by_id = get_by_id
         self.merge = merge
 
     async def check_message_limit(self, telegram_id: str) -> bool:
-        user: User = await self.get_by_id(telegram_id)
+        user: UserSchema = await self.get_by_id(telegram_id)
         if not user:
             return False 
 
@@ -62,7 +63,7 @@ class SubscriptionService:
             return user.daily_messages_used > limit  
 
     async def increment_message_count(self, telegram_id: str):
-        user: User = await self.get_by_id(telegram_id)
+        user: UserSchema = await self.get_by_id(telegram_id)
         if not user:
             return 
 

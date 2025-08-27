@@ -1,8 +1,6 @@
 import uvicorn
 from fastapi import APIRouter, status, Request, BackgroundTasks
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from contextlib import asynccontextmanager
-from pydantic import BaseModel
 from typing import Dict, Any
 import logging
 
@@ -11,7 +9,8 @@ from source.application.subscription.subscription_service import SubscriptionSer
 from source.infrastructure.database.repository import PaymentRepository
 from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.models.user_model import User
-from source.application.user import GetUserById, MergeUser
+from source.application.user import GetUserSchemaById, MergeUser
+from source.core.schemas.user_schema import UserSchema
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
@@ -22,7 +21,7 @@ router = APIRouter(prefix="/api/v1/parser", route_class=DishkaRoute)
 async def process_successful_payment(
     event_json: Dict[str, Any],
     payment_repo: PaymentRepository, 
-    get_user_id: GetUserById,
+    get_user_id: GetUserSchemaById,
     merge: MergeUser,
     bot: Bot
 ):
@@ -51,7 +50,7 @@ async def process_successful_payment(
         now = datetime.utcnow()
         date_end = now + relativedelta(months=payment_log.month_sub)
 
-        user: User = await get_user_id(telegram_id)  # Получить User
+        user: UserSchema = await get_user_id(telegram_id)  # Получить User
         if user:
             user.subscription = payment_log.subscription
             user.subscription_start = now
@@ -79,7 +78,7 @@ async def handle_yookassa_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
     payment_repo: FromDishka[PaymentRepository],
-    get_by_id: FromDishka[GetUserById],
+    get_by_id: FromDishka[GetUserSchemaById],
     merge: FromDishka[MergeUser],
     bot: FromDishka[Bot]
 ):

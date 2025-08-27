@@ -91,5 +91,6 @@ class BaseRepository(Generic[M]):
             await self.session.rollback()
             raise e
 
-    async def merge(self, model: M) -> None:
+    async def merge(self, model_schema: S) -> None:
+        model: M = self.model.from_pydantic(schema=model_schema)
         await self.session.merge(model)
