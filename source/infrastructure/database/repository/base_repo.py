@@ -81,14 +81,28 @@ class BaseRepository(Generic[M]):
         """Создание модели model: M"""
         try:
             model: M = self.model.from_pydantic(schema=model_schema)
+            
+            # 1. Add the object to the session
             self.session.add(model)
+            
+            # 2. Flush the session to the database. This makes the object "persistent".
+            await self.session.flush()
+            
+            # 3. Now refresh works because the object is persistent.
             await self.session.refresh(model)
+
+            # 4. Commit the transaction to save the changes.
+            await self.session.commit()
+            
             return model.get_schema()
+            
         except IntegrityError:
             await self.session.rollback()
+            # It's good practice to log the error here
             raise
         except Exception as e:
             await self.session.rollback()
+            # It's good practice to log the error here
             raise e
 
     async def merge(self, model_schema: S) -> None:
