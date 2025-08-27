@@ -43,3 +43,19 @@ def make_webhook_container() -> AsyncContainer:
             FastapiProvider(),
         ]
     )
+
+def make_common_container() -> AsyncContainer:
+    return make_async_container(
+        *[
+            RedisProvider(),
+            ConfigProvider(),
+            DatabaseProvider(),
+            BotProvider(),
+            DispatcherProvider(),
+            InteractorsProvider(),
+            RepositoryProvider(),
+            AssistantProvider(),
+            PaymentProvider(),
+            FastapiProvider(),
+        ]
+    )

@@ -1,11 +1,9 @@
 import logging
 
-from aiogram import F, Router
+from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
-from aiogram import Bot
-from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, Message
-from dishka.integrations.aiogram import FromDishka
+from dishka import AsyncContainer
 
 from source.application.ai_assistant.ai_assistant_service import AssistantService
 from source.application.message_history.message_history_service import MessageHistoryService
@@ -14,55 +12,43 @@ from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from source.presentation.telegram.utils import send_long_message
-from source.presentation.telegram.utils import convert_markdown_to_html
-
+from source.presentation.telegram.utils import send_long_message, convert_markdown_to_html
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
-
 @router.callback_query(MethodCallback.filter(F.name == "cbt"), SupportStates.METHOD_SELECT)
 async def handle_cbt_method(query: CallbackQuery, state: FSMContext):
-    # Temporarily disabled as per user request.
     await query.answer("Эта функция находится в разработке.", show_alert=True)
-    # logger.info(f"User {query.from_user.id} chose 'cbt' method.")
-    # await state.set_state(SupportStates.CBT_S1_SITUATION)
-    # text = "Хорошо, давай начнем вести дневник. Опиши ситуацию одним-двумя предложениями: что произошло?"
-    # await query.message.edit_text(text)
-    # await query.answer()
-
 
 @router.message(SupportStates.CBT_S1_SITUATION)
-async def handle_cbt_s1_situation(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
-    await history.add_message_to_history(
-        message.from_user.id, "cbt", ContextMessage(role="user", message=message.text)
-    )
+async def handle_cbt_s1_situation(message: Message, state: FSMContext, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    
+    await history.add_message_to_history(message.from_user.id, "cbt", ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_situation=message.text)
     await state.set_state(SupportStates.CBT_S2_EMOTIONS)
     text = "Понял. Какие эмоции ты испытал? Назови их и оцени интенсивность от 0 до 100."
     await message.answer(text)
 
-
 @router.message(SupportStates.CBT_S2_EMOTIONS)
-async def handle_cbt_s2_emotions(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
-    await history.add_message_to_history(
-        message.from_user.id, "cbt", ContextMessage(role="user", message=message.text)
-    )
+async def handle_cbt_s2_emotions(message: Message, state: FSMContext, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    
+    await history.add_message_to_history(message.from_user.id, "cbt", ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_emotions=message.text)
     await state.set_state(SupportStates.CBT_S3_THOUGHT)
     text = "Спасибо. Какая автоматическая мысль промелькнула у тебя в голове в тот момент?"
     await message.answer(text)
 
-
 @router.message(SupportStates.CBT_S3_THOUGHT)
-async def handle_cbt_s3_thought(
-        message: Message,
-        state: FSMContext,
-        assistant: FromDishka[AssistantService],
-        history: FromDishka[MessageHistoryService],
-        bot: Bot
-):
+async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    assistant: AssistantService = await container.get(AssistantService)
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+
     user_id = message.from_user.id
     context_scope = "cbt"
     await state.update_data(cbt_thought=message.text)
@@ -71,28 +57,23 @@ async def handle_cbt_s3_thought(
     user_message = ContextMessage(role="user", message=message.text)
     await history.add_message_to_history(user_id, context_scope, user_message)
     
-    data = await state.get_data()
+    state_data = await state.get_data()
     message_history = await history.get_history(user_id, context_scope)
 
     cbt_prompt = KPT_DIARY_PROMPT.format(
-        situation=data.get('cbt_situation', 'не указана'),
-        emotions=data.get('cbt_emotions', 'не указаны'),
-        thought=data.get('cbt_thought', 'не указана')
+        situation=state_data.get('cbt_situation', 'не указана'),
+        emotions=state_data.get('cbt_emotions', 'не указаны'),
+        thought=state_data.get('cbt_thought', 'не указана')
     )
 
     try:
-        response = await assistant.get_kpt_diary_response(
-            message=message.text,
-            context_messages=message_history,
-            prompt=cbt_prompt
-        )
+        response = await assistant.get_kpt_diary_response(message=message.text, context_messages=message_history, prompt=cbt_prompt)
         ai_response_text = response.message
         
         ai_message = ContextMessage(role="assistant", message=ai_response_text)
         await history.add_message_to_history(user_id, context_scope, ai_message)
 
         await send_long_message(message, convert_markdown_to_html(ai_response_text), bot)
-
     except Exception as e:
         logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")
         pass
@@ -100,47 +81,47 @@ async def handle_cbt_s3_thought(
     text = "Хорошо. А теперь, опираясь на сказанное, подумай, были ли в этой мысли когнитивные искажения? Например, 'чтение мыслей' или 'катастрофизация'. Можешь перечислить их."
     await message.answer(text)
 
-
 @router.message(SupportStates.CBT_S4_DISTORTIONS)
-async def handle_cbt_s4_distortions(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
-    await history.add_message_to_history(
-        message.from_user.id, "cbt", ContextMessage(role="user", message=message.text)
-    )
+async def handle_cbt_s4_distortions(message: Message, state: FSMContext, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    
+    await history.add_message_to_history(message.from_user.id, "cbt", ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_distortions=message.text)
     await state.set_state(SupportStates.CBT_S5_EVIDENCE)
     text = "Принято. Какие есть доказательства, подтверждающие эту мысль? А какие — опровергающие?"
     await message.answer(text)
 
-
 @router.message(SupportStates.CBT_S5_EVIDENCE)
-async def handle_cbt_s5_evidence(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
-    await history.add_message_to_history(
-        message.from_user.id, "cbt", ContextMessage(role="user", message=message.text)
-    )
+async def handle_cbt_s5_evidence(message: Message, state: FSMContext, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    
+    await history.add_message_to_history(message.from_user.id, "cbt", ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_evidence=message.text)
     await state.set_state(SupportStates.CBT_S6_ALTERNATIVE)
     text = "Отлично. А теперь попробуй сформулировать альтернативную, более сбалансированную мысль."
     await message.answer(text)
 
-
 @router.message(SupportStates.CBT_S6_ALTERNATIVE)
-async def handle_cbt_s6_alternative(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
-    await history.add_message_to_history(
-        message.from_user.id, "cbt", ContextMessage(role="user", message=message.text)
-    )
+async def handle_cbt_s6_alternative(message: Message, state: FSMContext, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+
+    await history.add_message_to_history(message.from_user.id, "cbt", ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_alternative=message.text)
     await state.set_state(SupportStates.CBT_S7_RERATING)
     text = "Супер. А теперь вернемся к твоим эмоциям. Оцени их интенсивность сейчас, от 0 до 100."
     await message.answer(text)
 
-
 @router.message(SupportStates.CBT_S7_RERATING)
-async def handle_cbt_s7_rerating(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
+async def handle_cbt_s7_rerating(message: Message, state: FSMContext, data: dict):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    
     user_id = message.from_user.id
     context_scope = "cbt"
-    await history.add_message_to_history(
-        user_id, context_scope, ContextMessage(role="user", message=message.text)
-    )
+    await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_rerating=message.text)
     cbt_data = await state.get_data()
     logger.info(f"User {user_id} finished CBT entry: {cbt_data}")
