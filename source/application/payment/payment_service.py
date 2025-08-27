@@ -20,7 +20,7 @@ class PaymentService(PaymentServiceInterface):
                                   telegram_id: str,
                                     username: str,
                                     customer_contact: dict,
-                                    sub_type: SubscriptionType) -> PaymentSchema:
+                                    subscription: SubscriptionType) -> PaymentSchema:
         
         payment_url, purchase_id = await self.yokassa_client.create_payment(amount=amount,
                                                             description=description, customer_contact=customer_contact)
@@ -36,7 +36,7 @@ class PaymentService(PaymentServiceInterface):
                 description=description,
                 status="pending",
                 link=payment_url,
-                subscription=sub_type,
+                subscription=subscription,
                 timestamp=datetime.now()
             )
         )
