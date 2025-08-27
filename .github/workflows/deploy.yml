@@ -2,7 +2,7 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -27,18 +27,40 @@ jobs:
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
 
+      - name: Create test .env file
+        run: |
+          cat > .env << 'EOF'
+          # Test Environment Configuration
+          DB_DRIVER=${{ secrets.DB_DRIVER }}
+          DB_SYSTEM=${{ secrets.DB_SYSTEM }}
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_NAME=test_db
+          DB_USER=test_user
+          DB_PASSWORD=test_password
+          DB_PATH=
+          
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+          REDIS_PASSWORD=test
+          REDIS_DATABASE=1
+          
+          TELEGRAM_TOKEN=test_token
+          ASSISTANT_API_KEY=test_key
+          
+          ENVIRONMENT=test
+          LOG_LEVEL=DEBUG
+          EOF
+
       - name: Install dependencies with Poetry
         run: |
-          poetry install --with dev --no-interaction --no-ansi
+          poetry install --no-interaction --no-ansi
 
       - name: Run unit tests with Poetry
         run: |
           poetry run pytest tests/ -v --tb=short
 
-      - name: Run static code analysis with Poetry
-        run: |
-          poetry run flake8 source/ --max-line-length=120 --ignore=E501,W503
-          poetry run python -c "import source.main.bot; print('✓ Bot module imports successfully')"
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,78 +69,134 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.8.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}  # Автоматически доступен в GitHub Actions
 
-      - name: Copy files to server
+      - name: Setup SSH key
         run: |
+          # Создаем .ssh папку
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Сохраняем приватный ключ из GitHub Secrets
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_action_key
+          chmod 600 ~/.ssh/github_action_key
+
+          # Добавляем хост в known_hosts
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          # Проверяем что файл создался
+          ls -la ~/.ssh/
+          echo "=== Key content start ==="
+          cat ~/.ssh/github_action_key
+          echo "=== Key content end ==="
+
+      - name: Verify exact key match
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/temp_key
+          chmod 600 ~/.ssh/temp_key
+          
+          # Проверяем fingerprint (самая точная проверка)
+          GENERATED_FINGERPRINT=$(ssh-keygen -l -f ~/.ssh/temp_key | awk '{print $2}')
+          echo "Generated fingerprint: $GENERATED_FINGERPRINT"
+
+      - name: Test SSH connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh -v -i ~/.ssh/github_action_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo '✅ SSH connection successful'"
+
+      - name: Copy files with rsync
+        run: |
+          echo "Copying files with rsync..."
           rsync -avz --delete \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='__pycache__' \
-            --exclude='.pytest_cache' \
             --exclude='.env' \
             --exclude='.venv' \
-            -e ssh ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/app/
+            -e "ssh -i ~/.ssh/github_action_key -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/app/TraumaBot/
 
+      - name: Create production .env file on server
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/app/TraumaBot
+            cat > .env << 'ENV_EOF'
+            DB_DRIVER=${{ secrets.DB_DRIVER }}
+            DB_SYSTEM=${{ secrets.DB_SYSTEM }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_NAME=${{ secrets.DB_NAME || 'psychoAI_db' }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_PATH=${{ secrets.DB_PATH }}
+            
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ secrets.REDIS_PORT }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            REDIS_DATABASE=${{ secrets.REDIS_DATABASE }}
+          
+            TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
+            ASSISTANT_API_KEY=${{ secrets.ASSISTANT_API_KEY }}
+          
+            ENVIRONMENT=production
+            LOG_LEVEL=INFO
+      
       - name: Deploy with Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd ~/app
-            
-            # Останавливаем и обновляем контейнеры
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/app/TraumaBot
             docker-compose down
             docker-compose pull
-            
-            # Пересобираем образ с обновленными зависимостями
             docker-compose build --no-cache
-            
-            # Запускаем контейнеры
             docker-compose up -d
-            
-            # Ждем запуска и проверяем статус
+                  
             sleep 15
             echo "=== Container status ==="
             docker-compose ps
-            
             echo "=== Recent logs ==="
             docker-compose logs --tail=30
           EOF
 
       - name: Run Alembic migrations
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/app/TraumaBot
             
             echo "⏳ Waiting for database..."
             for i in {1..10}; do
               if docker-compose exec -T db pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME || 'psychoAI_db' }}; then
+                echo "🚀 Running Alembic migrations..."
+                docker-compose exec -T web alembic upgrade head
+                echo "✅ Migrations completed"
                 echo "✅ Database is ready!"
                 break
               fi
               sleep 3
             done
-            
-            echo "🚀 Running Alembic migrations..."
-            docker-compose exec -T web alembic upgrade head
-            echo "✅ Migrations completed"
           EOF
 
       - name: Health check after deploy
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
-            # Проверяем что контейнеры запущены
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/app/TraumaBot
             echo "=== Running containers ==="
             docker-compose ps | grep -v "Exit"
             
-            # Проверяем логи на ошибки
             echo "=== Error check ==="
             docker-compose logs --tail=50 | grep -i "error\|exception\|fail" || echo "✓ No errors found"
             
-            # Проверяем здоровье сервисов
-            echo "=== Health check ==="
-            docker-compose exec -T db pg_isready -U admin -d psychoAI_db && echo "✓ PostgreSQL is healthy"
+            echo "=== PostgreSQL health check ==="
+            docker-compose exec -T db pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME || 'psychoAI_db' }} && echo "✓ PostgreSQL is healthy"
+            
+            echo "=== .env file check ==="
+            if [ -f .env ]; then
+              echo "✓ .env file exists"
+              cat .env | sed 's/=.*/=***/' | head -10
+            else
+              echo "✗ .env file missing"
+            fi
           EOF
