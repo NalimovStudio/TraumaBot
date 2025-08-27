@@ -18,6 +18,8 @@ from source.presentation.telegram.keyboards.keyboards import (
 from source.presentation.telegram.states.user_states import SupportStates
 from source.presentation.telegram.utils import send_long_message
 from source.presentation.telegram.utils import convert_markdown_to_html
+from source.application.subscription.subscription_service import SubscriptionService 
+
 
 
 logger = logging.getLogger(__name__)
@@ -69,6 +71,7 @@ async def handle_calming_talk(
     state: FSMContext,
     assistant: FromDishka[AssistantService],
     history: FromDishka[MessageHistoryService],
+    subscription_service: FromDishka[SubscriptionService],
     bot: Bot,
 ):
     user_id = message.from_user.id
@@ -95,6 +98,9 @@ async def handle_calming_talk(
         await history.add_message_to_history(user_id, context_scope, ai_message_context)
 
         await send_long_message(message, convert_markdown_to_html(ai_response_text), bot, keyboard=get_back_to_menu_keyboard())
+        telegram_id = str(user_id)
+        await subscription_service.increment_message_count(telegram_id)
+
 
     except Exception as e:
         logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")

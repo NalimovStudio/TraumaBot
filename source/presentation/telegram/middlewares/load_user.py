@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -35,14 +36,14 @@ class LoadUserMiddleware(BaseMiddleware):
                     )
                 )
 
-                if not user:
-                    user: UserSchema = await get_user(str(aiogram_user.id))
-
                 data["user"] = user
-                
                 return await handler(event, data)
-        except Exception as exc:
-            pass
+                
+        except Exception:
+            logging.info("User already created")
+            user: UserSchema = await get_user(str(aiogram_user.id))
+            data["user"] = user
+        
             return await handler(event, data)
 
         

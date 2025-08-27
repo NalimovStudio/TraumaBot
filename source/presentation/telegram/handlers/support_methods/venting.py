@@ -9,7 +9,7 @@ from aiogram.exceptions import TelegramBadRequest
 from dishka.integrations.aiogram import FromDishka
 
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
-from source.presentation.telegram.keyboards.keyboards import get_venting_summary_keyboard, get_main_keyboard
+from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
 from source.application.ai_assistant.ai_assistant_service import AssistantService
 from source.application.message_history.message_history_service import MessageHistoryService
@@ -21,14 +21,11 @@ from source.presentation.telegram.utils import convert_markdown_to_html
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
-# Register middleware for messages (применится ко всем message handlers в этом router)
-router.message.middleware(LimitCheckMiddleware())
-
 @router.callback_query(MethodCallback.filter(F.name == "vent"), SupportStates.METHOD_SELECT)
 async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} chose 'vent' method.")
     await state.set_state(SupportStates.VENTING)
-    text = "Можешь просто писать всё, как идёт. Я буду отвечать коротко и бережно.\n\nКогда захочешь закончить, отправь команду /stop."
+    text = "Можешь просто писать всё, как идёт. Я буду отвечать коротко и бережно. (в течении 5-10 сек)\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
     await query.message.edit_text(text, reply_markup=None)
     await query.answer()
 
@@ -42,10 +39,9 @@ async def handle_stop_venting(message: Message, state: FSMContext, history: From
     await history.clear_history(user_id, context_scope)
     
     await message.answer(
-        "Хорошо, мы закончили. Что бы ты хотел сделать с этой беседой?",
-        reply_markup=get_venting_summary_keyboard()
+        "Хорошо, мы закончили. Возвращаю в главное меню.",
+        reply_markup=get_main_keyboard()
     )
-    await message.answer("Возвращаю в главное меню.", reply_markup=get_main_keyboard())
 
 @router.message(SupportStates.VENTING)
 async def handle_venting_message(

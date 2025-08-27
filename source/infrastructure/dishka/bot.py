@@ -37,6 +37,6 @@ class DispatcherProvider(Provider):
         dp = Dispatcher(storage=storage, events_isolation=event_isolation)
         dp.include_router(handlers_router)
         dp.update.middleware(LoadUserMiddleware())
-        dp.update.middleware(LimitCheckMiddleware())
+        dp.message.middleware(LimitCheckMiddleware())
         setup_dishka(dishka, dp, auto_inject=True)
         return dp

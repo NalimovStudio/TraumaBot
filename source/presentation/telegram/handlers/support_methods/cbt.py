@@ -24,11 +24,13 @@ router = Router(name=__name__)
 
 @router.callback_query(MethodCallback.filter(F.name == "cbt"), SupportStates.METHOD_SELECT)
 async def handle_cbt_method(query: CallbackQuery, state: FSMContext):
-    logger.info(f"User {query.from_user.id} chose 'cbt' method.")
-    await state.set_state(SupportStates.CBT_S1_SITUATION)
-    text = "Хорошо, давай начнем вести дневник. Опиши ситуацию одним-двумя предложениями: что произошло?"
-    await query.message.edit_text(text)
-    await query.answer()
+    # Temporarily disabled as per user request.
+    await query.answer("Эта функция находится в разработке.", show_alert=True)
+    # logger.info(f"User {query.from_user.id} chose 'cbt' method.")
+    # await state.set_state(SupportStates.CBT_S1_SITUATION)
+    # text = "Хорошо, давай начнем вести дневник. Опиши ситуацию одним-двумя предложениями: что произошло?"
+    # await query.message.edit_text(text)
+    # await query.answer()
 
 
 @router.message(SupportStates.CBT_S1_SITUATION)

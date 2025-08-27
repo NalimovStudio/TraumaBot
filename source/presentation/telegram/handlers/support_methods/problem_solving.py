@@ -17,6 +17,8 @@ from source.presentation.telegram.utils import send_long_message, extract_json_f
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.utils import convert_markdown_to_html
+from source.application.subscription.subscription_service import SubscriptionService 
+
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +53,7 @@ async def handle_ps_s2_goal(
         state: FSMContext,
         assistant: FromDishka[AssistantService],
         history: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
         bot: Bot
 ):
     user_id = message.from_user.id
@@ -63,6 +66,7 @@ async def handle_ps_s2_goal(
     await state.update_data(problem_goal=message.text)
     await state.set_state(SupportStates.PROBLEM_S3_OPTIONS)
     await message.answer("Спасибо. Я подумаю и предложу варианты действий. Минутку...")
+    
 
     try:
         raw_response = await assistant.get_problems_solver_response(
@@ -93,6 +97,10 @@ async def handle_ps_s2_goal(
             bot=bot,
             keyboard=get_problem_solutions_keyboard()
         )
+        telegram_id = str(user_id)
+        await subscription_service.increment_message_count(telegram_id)
+
+        
 
     except (json.JSONDecodeError, TypeError, KeyError) as e:
         logger.error(f"Error when scraping {user_id} in scope {context_scope}: {e}")

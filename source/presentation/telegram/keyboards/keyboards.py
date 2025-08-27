@@ -55,7 +55,8 @@ class ButtonText:
 
     # Inline Keyboard - Methods
     CALM_DOWN = "Успокоиться"
-    CBT_DIARY = "КПТ (Дневник эмоций)"
+    # TODO: Раскоментировать данный блок что бы вернуть Дневник эмоций
+    # CBT_DIARY = "КПТ (Дневник эмоций)"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     VENT_OUT = "Высказаться"
 
@@ -114,12 +115,13 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
                     callback_data=MethodCallback(name="calm").pack(),
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    text=ButtonText.CBT_DIARY,
-                    callback_data=MethodCallback(name="cbt").pack(),
-                )
-            ],
+            # TODO: Раскоментировать данный блок что бы вернуть Дневник эмоций
+            # [
+            #     InlineKeyboardButton(
+            #         text=ButtonText.CBT_DIARY,
+            #         callback_data=MethodCallback(name="cbt").pack(),
+            #     )
+            # ],
             [
                 InlineKeyboardButton(
                     text=ButtonText.PROBLEM_SOLVING,

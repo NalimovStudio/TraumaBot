@@ -1,4 +1,5 @@
 #[ History service ]
+
 HISTORY_MAX_LEN=10
 
 # [Subscription Limit ]

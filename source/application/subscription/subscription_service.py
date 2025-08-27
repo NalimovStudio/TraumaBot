@@ -48,7 +48,7 @@ class SubscriptionService:
             limit = LIMIT_MESSAGE_STANDART * max(months, 1)  # 1000 сообщений лимит в месяц для стандарта
             if modified:
                 await self.merge(user)
-            return user.messages_used < limit
+            return user.messages_used > limit
 
         else:  # Бесплатная подписка
             # Дневной сброс
@@ -59,7 +59,7 @@ class SubscriptionService:
             limit = LIMIT_MESSAGE_FREE
             if modified:
                 await self.merge(user)
-            return user.daily_messages_used < limit
+            return user.daily_messages_used > limit  
 
     async def increment_message_count(self, telegram_id: str):
         user: User = await self.get_by_id(telegram_id)
