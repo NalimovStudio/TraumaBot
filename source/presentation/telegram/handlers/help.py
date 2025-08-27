@@ -18,8 +18,8 @@ router = Router(name=__name__)
 async def handle_help_start_dialog(query: CallbackQuery, state: FSMContext):
     await state.set_state(SupportStates.CHECK_IN)
     text = (
-        "Я рядом. Как ты себя чувствуешь сейчас? "
-        "Если бы это было погодой — какой она была бы?"
+        "Как ты себя чувствуешь сейчас? "
+        "Оцени по шкале от 1 до 10"
     )
     await query.message.answer(text=text, reply_markup=ReplyKeyboardRemove())
     await query.answer()

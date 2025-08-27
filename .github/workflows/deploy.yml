@@ -148,12 +148,17 @@ jobs:
             DOMAIN=${{ secrets.DOMAIN }}
             TELEGRAM_WEBHOOK_URL=${{ secrets.TELEGRAM_WEBHOOK_URL }}
           
+            STORE_ID=${{ secrets.STORE_ID }}
+            STORE_TOKEN=${{ secrets.STORE_TOKEN }}
+          
             ENVIRONMENT=production
             LOG_LEVEL=INFO
             ENV_EOF
 
       - name: Clean old images
-        run: echo "Running Docker cleanup..."
+        run: |
+          echo "Running Docker cleanup..."
+          chmod +x cleanup_docker.sh
           ./cleanup_docker.sh
       
       - name: Deploy with Docker Compose
@@ -181,7 +186,7 @@ jobs:
             for i in {1..10}; do
               if docker-compose exec -T db pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME || 'psychoAI_db' }}; then
                 echo "🚀 Running Alembic migrations..."
-                docker-compose exec -T web alembic upgrade head
+                docker-compose exec -T fastapi poetry run alembic upgrade head
                 echo "✅ Migrations completed"
                 echo "✅ Database is ready!"
                 break

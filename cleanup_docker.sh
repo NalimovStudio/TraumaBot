@@ -1,22 +1,31 @@
-bash
-   #!/bin/bash
-   set -e
+#!/bin/bash
 
-   echo "Starting Docker cleanup..."
+echo "🔍 Checking Docker disk usage before cleanup..."
+docker system df
 
-   # Остановка всех контейнеров (если нужно)
-   docker-compose -f /home/deploy/app/TraumaBot/docker-compose.yml down
+echo "🧹 Cleaning up unused Docker resources..."
 
-   # Очистка неиспользуемых образов, контейнеров, volumes
-   echo "Cleaning unused Docker objects..."
-   docker system prune -a --volumes -f
+# Удаляем остановленные контейнеры
+echo "🗑️ Removing stopped containers..."
+CONTAINERS_OUTPUT=$(docker container prune -f)
+echo "$CONTAINERS_OUTPUT"
 
-   # Очистка кэша сборки
-   echo "Cleaning build cache..."
-   docker builder prune -f
+# Удаляем неиспользуемые образы
+echo "🖼️ Removing dangling images..."
+IMAGES_OUTPUT=$(docker image prune -f)
+echo "$IMAGES_OUTPUT"
 
-   # Проверка и удаление больших логов (если не ограничены)
-   echo "Cleaning large log files..."
-   find /var/lib/docker/containers/ -type f -name '*-json.log' -size +10M -delete
+# Удаляем неиспользуемые сети
+echo "🌐 Removing unused networks..."
+NETWORKS_OUTPUT=$(docker network prune -f)
+echo "$NETWORKS_OUTPUT"
 
-   echo "Docker cleanup completed."
+# Удаляем строительный кэш
+echo "🧱 Removing build cache..."
+BUILDER_OUTPUT=$(docker builder prune -f)
+echo "$BUILDER_OUTPUT"
+
+echo "🔍 Checking Docker disk usage after cleanup..."
+docker system df
+
+echo "✅ Docker cleanup completed successfully!"

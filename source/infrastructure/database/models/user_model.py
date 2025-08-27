@@ -37,6 +37,12 @@ class User(BaseModel):
     )
     subscription_date_end: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
+    messages_used: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных сообщений в текущем периоде подписки (для STANDARD)")
+    subscription_start: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), comment="Дата начала текущей подписки")
+
+    daily_messages_used: Mapped[int] = mapped_column(Integer, default=0, comment="Daily использованные сообщения (для FREE)")
+    last_daily_reset: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), comment="Дата последнего daily reset (для FREE)")
+
     logging_requests: Mapped[list["UserDialogsLogging"]] = relationship(
         "UserDialogsLogging",
         back_populates="user",

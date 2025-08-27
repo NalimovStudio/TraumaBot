@@ -10,13 +10,13 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from source.core.logging.logging_config import configure_logging
-from source.infrastructure.dishka import make_webhook_container
+from source.infrastructure.dishka import make_dishka_container
 from source.presentation.fastapi.webhooks_router import webhooks_router
 
 configure_logging()
 logger = logging.getLogger(__name__)
 
-app_container = make_webhook_container()
+dishka_container = make_dishka_container()
 
 
 @asynccontextmanager
@@ -44,8 +44,8 @@ async def lifespan(app: FastAPI):
         logger.info("🔄 Starting Dishka container...")
 
         # Получаем зависимости из контейнера
-        bot: Bot = await app_container.get(Bot)
-        dp: Dispatcher = await app_container.get(Dispatcher)
+        bot: Bot = await dishka_container.get(Bot)
+        dp: Dispatcher = await dishka_container.get(Dispatcher)
 
         webhook_url = "https://траума.рф/v1/webhooks/telegram"
         success = await set_webhook_with_retry(bot, webhook_url)
@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
         raise
     finally:
         logger.info("🔄 Closing Dishka container...")
-        await app_container.close()
+        await dishka_container.close()
         logger.info("✅ Dishka container closed")
 
 
@@ -77,7 +77,7 @@ def create_app() -> FastAPI:
     )
 
     # Настраиваем Dishka
-    setup_dishka(app_container, app)
+    setup_dishka(dishka_container, app)
 
     app.include_router(webhooks_router, prefix="", tags=["webhooks"])
 

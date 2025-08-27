@@ -27,6 +27,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
+    container_name: redis
     command: redis-server --requirepass admin
     ports:
       - "0.0.0.0:6379:6379"

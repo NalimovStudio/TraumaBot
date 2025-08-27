@@ -41,7 +41,9 @@ def user_schema():
         username="sperma",
         dialogs_completed=0,
         user_type=UserType.USER,
-        subscription=SubscriptionType.FREE
+        subscription=SubscriptionType.FREE,
+        messages_used = 0,
+        daily_messages_used = 0,
     )
 
 

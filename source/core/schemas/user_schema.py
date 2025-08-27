@@ -33,6 +33,11 @@ class UserSchema(BaseModel):
     subscription: SubscriptionType = Field(..., description="тип подписки")
     subscription_date_end: Optional[datetime] = Field(None, description="когда кончится подписка")
 
+    messages_used: int = Field(0, description="Использумое количество сообщений")
+    subscription_start: Optional[datetime] = Field(None, description="Начало подписки")
+    daily_messages_used: int = Field(0, description="Количество сообщений в день")
+    last_daily_reset: Optional[datetime] = Field(None, description="Последнея дата сброса сообщений")
+
     logging_requests: Optional[list[UserDialogsLoggingSchema]] = Field(None, description="массив со всеми запросами")
 
     class Config:
