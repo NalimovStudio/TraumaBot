@@ -4,6 +4,8 @@ from source.application.payment.PaymentServiceInterface import PaymentServiceInt
 from source.infrastructure.yookassa import YooKassaClient
 from source.infrastructure.database.repository import PaymentRepository
 from source.core.schemas.payment_schema import PaymentSchema
+from source.core.enum import SubscriptionType
+
 
 
 class PaymentService(PaymentServiceInterface):
@@ -17,7 +19,8 @@ class PaymentService(PaymentServiceInterface):
                                 months_sub: int,
                                   telegram_id: str,
                                     username: str,
-                                    customer_contact: dict) -> PaymentSchema:
+                                    customer_contact: dict,
+                                    sub_type: SubscriptionType) -> PaymentSchema:
         
         payment_url, purchase_id = await self.yokassa_client.create_payment(amount=amount,
                                                             description=description, customer_contact=customer_contact)
@@ -33,6 +36,7 @@ class PaymentService(PaymentServiceInterface):
                 description=description,
                 status="pending",
                 link=payment_url,
+                subscription=sub_type,
                 timestamp=datetime.now()
             )
         )

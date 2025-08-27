@@ -28,9 +28,9 @@ class MessageHistoryService(MessageHistoryServiceInterface):
             message_json = message.model_dump_json()
             await self._redis.lpush(key, message_json)
             await self._redis.ltrim(key, 0, self.HISTORY_MAX_LEN - 1)
-            logger.debug(f"Сохранили сообщение в историю для юзера {user_id} в скоп {context_scope}")
+            logger.debug(f"Saved message to history for user {user_id} in scope {context_scope}")
         except Exception as e:
-            logger.error(f"Ошибка при сохрании сообщения в истории для юзера {user_id} в скопе {context_scope}: {e}")
+            logger.error(f"Error saving message to history for user {user_id} in scope {context_scope}: {e}")
 
     async def get_history(self, user_id: int, context_scope: str) -> List[ContextMessage]:
         """
@@ -41,10 +41,10 @@ class MessageHistoryService(MessageHistoryServiceInterface):
             history_json = await self._redis.lrange(key, 0, -1)
             history = [ContextMessage.model_validate(json.loads(msg)) for msg in history_json]
             history.reverse()
-            logger.debug(f"История {len(history)} из сообщения для юзера {user_id} в скопе {context_scope}")
+            logger.debug(f"Retrieved {len(history)} messages from history for user {user_id} in scope {context_scope}")
             return history
         except Exception as e:
-            logger.error(f"Ошибка в получении истории {user_id} В скопе {context_scope}: {e}")
+            logger.error(f"Error retrieving history for user {user_id} in scope {context_scope}: {e}")
             return []
         
     async def clear_history(self, user_id: int, context_scope: str):
@@ -52,6 +52,6 @@ class MessageHistoryService(MessageHistoryServiceInterface):
         key = self._get_user_key(user_id, context_scope)
         try:
             await self._redis.delete(key)
-            logger.info(f"Очистили историю {user_id} В скопе {context_scope}")
+            logger.info(f"Cleared history for user {user_id} in scope {context_scope}")
         except Exception as e:
-            logger.error(f"Ошибка при удалении истории {user_id} В скопе {context_scope}: {e}")
+            logger.error(f"Error clearing history for user {user_id} in scope {context_scope}: {e}")

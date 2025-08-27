@@ -15,3 +15,8 @@ class UserRepository(BaseRepository):
         result = await self.session.execute(stmt)
         model: User = result.scalar_one_or_none()
         return model.get_schema() if model is not None else None
+
+    async def get_model_by_telegram_id(self, telegram_id: str) -> User | None:
+        stmt: Select = select(self.model).where(self.model.telegram_id == telegram_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()

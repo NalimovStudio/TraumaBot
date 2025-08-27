@@ -9,7 +9,7 @@ from aiogram.enums import ParseMode
 from typing import AsyncIterable
 
 from source.infrastructure.config import BotConfig
-from source.presentation.telegram.middlewares import LoadUserMiddleware
+from source.presentation.telegram.middlewares import LoadUserMiddleware, LimitCheckMiddleware
 from source.presentation.telegram.handlers import handlers_router
 
 
@@ -37,5 +37,6 @@ class DispatcherProvider(Provider):
         dp = Dispatcher(storage=storage, events_isolation=event_isolation)
         dp.include_router(handlers_router)
         dp.update.middleware(LoadUserMiddleware())
+        dp.message.middleware(LimitCheckMiddleware())
         setup_dishka(dishka, dp, auto_inject=True)
         return dp

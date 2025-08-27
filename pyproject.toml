@@ -47,6 +47,7 @@ dependencies = [
     "twisted (>=25.5.0,<26.0.0)",
     "uvicorn (>=0.35.0,<0.36.0)",
     "fastapi (>=0.116.1,<0.117.0)",
+    "python-dateutil (>=2.9.0.post0,<3.0.0)",
 ]
 
 [tool.poetry]

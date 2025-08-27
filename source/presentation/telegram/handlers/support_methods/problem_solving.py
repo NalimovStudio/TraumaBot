@@ -4,6 +4,7 @@ import json
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from aiogram.enums import ParseMode
 from dishka.integrations.aiogram import FromDishka
 
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, ProblemSolvingCallback
@@ -15,9 +16,14 @@ from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.utils import send_long_message, extract_json_from_markdown
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.core.schemas.assistant_schemas import ContextMessage
+from source.presentation.telegram.utils import convert_markdown_to_html
+from source.application.subscription.subscription_service import SubscriptionService 
+
+
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
+
 
 
 @router.callback_query(MethodCallback.filter(F.name == "problem"), SupportStates.METHOD_SELECT)
@@ -47,6 +53,7 @@ async def handle_ps_s2_goal(
         state: FSMContext,
         assistant: FromDishka[AssistantService],
         history: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
         bot: Bot
 ):
     user_id = message.from_user.id
@@ -59,6 +66,7 @@ async def handle_ps_s2_goal(
     await state.update_data(problem_goal=message.text)
     await state.set_state(SupportStates.PROBLEM_S3_OPTIONS)
     await message.answer("Спасибо. Я подумаю и предложу варианты действий. Минутку...")
+    
 
     try:
         raw_response = await assistant.get_problems_solver_response(
@@ -85,19 +93,23 @@ async def handle_ps_s2_goal(
         response_text += "Какой из вариантов тебе кажется наиболее подходящим сейчас?"
         await send_long_message(
             message=message,
-            text=response_text,
+            text=convert_markdown_to_html(response_text),
             bot=bot,
             keyboard=get_problem_solutions_keyboard()
         )
+        telegram_id = str(user_id)
+        await subscription_service.increment_message_count(telegram_id)
+
+        
 
     except (json.JSONDecodeError, TypeError, KeyError) as e:
-        logger.error(f"Ошибка при парсинге юзера {user_id} в скопе {context_scope}: {e}")
+        logger.error(f"Error when scraping {user_id} in scope {context_scope}: {e}")
         await message.answer(
             "Произошла ошибка при обработке ответа. Попробуйте сформулировать проблему немного иначе."
         )
         await state.set_state(SupportStates.METHOD_SELECT)
     except Exception as e:
-        logger.error(f"Не ожидаемая ошибка для юзера {user_id} в скопе {context_scope}: {e}")
+        logger.error(f"Unknown error {user_id} in scope {context_scope}: {e}")
         await message.answer("Что-то пошло не так. Пожалуйста, попробуйте позже.")
         await state.clear()
         await history.clear_history(user_id, context_scope)

@@ -34,3 +34,17 @@ def extract_json_from_markdown(text: str) -> str:
     if match:
         return match.group(2).strip()
     return text
+
+import re
+
+def convert_markdown_to_html(text: str) -> str:
+    """
+    Конвертирует базовые элементы Markdown в HTML.
+    """
+    # Заменяем **жирный** на <b>жирный</b>
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    # Заменяем *курсив* на <i>курсив</i>
+    text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+    # Заменяем _курсив_ на <i>курсив</i>
+    text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)
+    return text

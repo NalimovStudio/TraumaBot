@@ -31,6 +31,5 @@ class CreateUser(Interactor[UserSchemaRequest, S]):
                 return user
             return data
         except IntegrityError:
-            pass #TODO Тут нужно свою ошибку написать и вызывать ее для дальнейшей обработки либо же самому ошибку в этом блоке решать и возвращать данные
-            #Ошибка связана с тем что пользователь уже есть в бд
+            pass
     
