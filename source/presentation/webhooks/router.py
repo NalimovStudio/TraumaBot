@@ -9,7 +9,7 @@ from source.application.subscription.subscription_service import SubscriptionSer
 from source.infrastructure.database.repository import PaymentRepository
 from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.models.user_model import User
-from source.application.user import GetUserSchemaById, MergeUser
+from source.application.user import GetUserSchemaById, MergeUser, MergePayment
 from source.core.schemas.user_schema import UserSchema
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -22,7 +22,8 @@ async def process_successful_payment(
     event_json: Dict[str, Any],
     payment_repo: PaymentRepository, 
     get_user_id: GetUserSchemaById,
-    merge: MergeUser,
+    merge_user: MergeUser,
+    merge_payment: MergePayment,
     bot: Bot
 ):
     """Асинхронная обработка успешной оплаты (в background)."""
@@ -57,7 +58,7 @@ async def process_successful_payment(
             user.subscription_date_end = date_end
             user.messages_used = 0
             user.daily_messages_used = 0 
-            await merge(user)  # Merge для сохранения
+            await merge_user(user)  # Merge для сохранения
 
         payment_log.status = 'succeeded'
         await payment_repo.merge(payment_log) 
@@ -71,7 +72,6 @@ async def process_successful_payment(
 
     except Exception as e:
         logger.error(f"Error processing payment {purchase_id}: {e}")
-        # Здесь можно добавить retry или лог в DLQ, но для простоты - log
 
 @router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
 async def handle_yookassa_webhook(
