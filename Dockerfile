@@ -1,48 +1,27 @@
-# --- BUILDER STAGE ---
-FROM python:3.12 as builder
-
-WORKDIR /app
-
-RUN pip install "poetry==2.1.4"
-
-RUN poetry --version
-
-# Copy only the Poetry configuration files first
-# This allows Docker to cache this layer if pyproject.toml and poetry.lock don't change
-COPY pyproject.toml poetry.lock ./
-
-RUN poetry install --no-root
-
-# Export dependencies to a requirements.txt file
-# --only main ensures only main dependencies are included (no dev)
-# --without-hashes is often needed for compatibility with pip in Docker,
-# though using hashes is more secure if you can manage it.
-RUN poetry self add poetry-plugin-export
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
-
-# Create a virtual environment and install dependencies into it
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-
-# --- FINAL STAGE ---
 FROM python:3.12-slim
 
-WORKDIR /TraumaBot
-ENV PYTHONPATH=/TraumaBot
+WORKDIR /app
+ENV PYTHONPATH=/app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+    echo "nameserver 1.1.1.1" >> /etc/resolv.conf && \
+    ping -c 4 deb.debian.org || echo "DNS resolution failed"
 
-# Copy the created virtual environment from the builder stage
-COPY --from=builder /opt/venv /opt/venv
-# Set environment variables for the virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/opt/venv"
+# Установка curl с явным зеркалом
+RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.list && \
+    echo "deb http://deb.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir poetry>=2.1.4
+
+COPY pyproject.toml poetry.lock ./
+
+RUN poetry install --no-interaction --no-root
 
 COPY . .
+
+# Создаем симлинки для обратной совместимости
+RUN ln -sf /app /TraumaBot && \
+    ln -sf /app /source

@@ -3,18 +3,12 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from dishka import AsyncContainer
-from dishka.integrations.aiogram import CONTAINER_NAME
-from source.core.schemas.user_schema import UserSchema
-
-
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
-from aiogram.types import User as TelegramUser
+from aiogram.types import TelegramObject, User as TelegramUser
 
 from source.application.user import CreateUser
-from source.core.schemas.user_schema import UserSchemaRequest
+from source.core.schemas.user_schema import UserSchemaRequest, UserSchema
 from source.application.user.get_by_id import GetUserSchemaById
-
 
 class LoadUserMiddleware(BaseMiddleware):
     async def __call__(
@@ -23,28 +17,33 @@ class LoadUserMiddleware(BaseMiddleware):
         event: TelegramObject, 
         data: dict[str, Any]
     ):
+        if not data.get("event_from_user"):
+            return await handler(event, data)
+
+        aiogram_user: TelegramUser = data["event_from_user"]
+        
         try:
-            if data.get("event_from_user"):
-                dishka: AsyncContainer = data[CONTAINER_NAME]
-                create_user: CreateUser = await dishka.get(CreateUser)
-                get_user: GetUserSchemaById = await dishka.get(GetUserSchemaById)
-                aiogram_user: TelegramUser = data["event_from_user"]
+            container: AsyncContainer = data["dishka_container"]
+            get_user: GetUserSchemaById = await container.get(GetUserSchemaById)
+
+            user: UserSchema = await get_user(str(aiogram_user.id))
+
+            if not user:
+                create_user: CreateUser = await container.get(CreateUser)
+
+                username_to_save = aiogram_user.username or aiogram_user.full_name
+
                 user: UserSchema = await create_user(
                     UserSchemaRequest(
                         telegram_id=str(aiogram_user.id),
-                        username=aiogram_user.username
+                        username=username_to_save
                     )
                 )
-
-                data["user"] = user
-                return await handler(event, data)
-                
-        except Exception:
-            logging.info("User already created")
-            user: UserSchema = await get_user(str(aiogram_user.id))
-            data["user"] = user
-        
-            return await handler(event, data)
-
-        
+                logging.info(f"User {aiogram_user.id} created.")
             
+            data["user"] = user
+            return await handler(event, data)
+                
+        except Exception as e:
+            logging.error(f"Error in LoadUserMiddleware for user {aiogram_user.id}: {e}", exc_info=True)
+            return None

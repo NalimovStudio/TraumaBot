@@ -4,8 +4,7 @@ import json
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from aiogram.enums import ParseMode
-from dishka.integrations.aiogram import FromDishka
+from dishka import AsyncContainer
 
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, ProblemSolvingCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, get_problem_solutions_keyboard
@@ -13,18 +12,11 @@ from source.presentation.telegram.states.user_states import SupportStates
 from source.application.ai_assistant.ai_assistant_service import AssistantService
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.presentation.telegram.utils import send_long_message, extract_json_from_markdown
-from source.application.message_history.message_history_service import MessageHistoryService
-from source.core.schemas.assistant_schemas import ContextMessage
-from source.presentation.telegram.utils import convert_markdown_to_html
+from source.presentation.telegram.utils import send_long_message, extract_json_from_markdown, convert_markdown_to_html
 from source.application.subscription.subscription_service import SubscriptionService 
-
-
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
-
-
 
 @router.callback_query(MethodCallback.filter(F.name == "problem"), SupportStates.METHOD_SELECT)
 async def handle_problem_solving_method(query: CallbackQuery, state: FSMContext):
@@ -34,10 +26,11 @@ async def handle_problem_solving_method(query: CallbackQuery, state: FSMContext)
     await query.message.edit_text(text)
     await query.answer()
 
-
-
 @router.message(SupportStates.PROBLEM_S1_DEFINE)
-async def handle_ps_s1_define(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
+async def handle_ps_s1_define(message: Message, state: FSMContext, **data):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    
     await history.add_message_to_history(
         message.from_user.id, "problem_solving", ContextMessage(role="user", message=message.text)
     )
@@ -46,16 +39,13 @@ async def handle_ps_s1_define(message: Message, state: FSMContext, history: From
     text = "Хорошо. А как ты поймешь, что проблема решена? Что будет твоим критерием успеха?"
     await message.answer(text)
 
-
 @router.message(SupportStates.PROBLEM_S2_GOAL)
-async def handle_ps_s2_goal(
-        message: Message,
-        state: FSMContext,
-        assistant: FromDishka[AssistantService],
-        history: FromDishka[MessageHistoryService],
-        subscription_service: FromDishka[SubscriptionService],
-        bot: Bot
-):
+async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **data):
+    container: AsyncContainer = data["dishka_container"]
+    assistant: AssistantService = await container.get(AssistantService)
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    subscription_service: SubscriptionService = await container.get(SubscriptionService)
+    
     user_id = message.from_user.id
     context_scope = "problem_solving"
 
@@ -66,7 +56,6 @@ async def handle_ps_s2_goal(
     await state.update_data(problem_goal=message.text)
     await state.set_state(SupportStates.PROBLEM_S3_OPTIONS)
     await message.answer("Спасибо. Я подумаю и предложу варианты действий. Минутку...")
-    
 
     try:
         raw_response = await assistant.get_problems_solver_response(
@@ -99,21 +88,16 @@ async def handle_ps_s2_goal(
         )
         telegram_id = str(user_id)
         await subscription_service.increment_message_count(telegram_id)
-
         
-
     except (json.JSONDecodeError, TypeError, KeyError) as e:
         logger.error(f"Error when scraping {user_id} in scope {context_scope}: {e}")
-        await message.answer(
-            "Произошла ошибка при обработке ответа. Попробуйте сформулировать проблему немного иначе."
-        )
+        await message.answer("Произошла ошибка при обработке ответа. Попробуйте сформулировать проблему немного иначе.")
         await state.set_state(SupportStates.METHOD_SELECT)
     except Exception as e:
         logger.error(f"Unknown error {user_id} in scope {context_scope}: {e}")
         await message.answer("Что-то пошло не так. Пожалуйста, попробуйте позже.")
         await state.clear()
         await history.clear_history(user_id, context_scope)
-
 
 @router.callback_query(ProblemSolvingCallback.filter(F.action == "choose_option"), SupportStates.PROBLEM_S3_OPTIONS)
 async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvingCallback, state: FSMContext):
@@ -126,9 +110,11 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
     await query.message.edit_text(text)
     await query.answer()
 
-
 @router.message(SupportStates.PROBLEM_S4_CHOICE)
-async def handle_ps_s4_step(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
+async def handle_ps_s4_step(message: Message, state: FSMContext, **data):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+
     await history.add_message_to_history(
         message.from_user.id, "problem_solving", ContextMessage(role="user", message=message.text)
     )
@@ -137,9 +123,11 @@ async def handle_ps_s4_step(message: Message, state: FSMContext, history: FromDi
     text = "Супер. Это звучит как отличный, выполнимый шаг. Давай заключим 'пакт'. Когда ты планируешь это сделать? (Например, 'сегодня вечером' или 'завтра в 12:00')."
     await message.answer(text)
 
-
 @router.message(SupportStates.PROBLEM_S5_PACT)
-async def handle_ps_s5_pact(message: Message, state: FSMContext, history: FromDishka[MessageHistoryService]):
+async def handle_ps_s5_pact(message: Message, state: FSMContext, **data):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+
     user_id = message.from_user.id
     context_scope = "problem_solving"
     await history.add_message_to_history(

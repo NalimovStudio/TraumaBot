@@ -1,30 +1,30 @@
-import uvicorn
-from fastapi import APIRouter, status, Request, BackgroundTasks
-from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from contextlib import asynccontextmanager
-from pydantic import BaseModel
-from typing import Dict, Any
 import logging
+from datetime import datetime
+from typing import Dict, Any
 
-from aiogram import Bot
-from source.application.subscription.subscription_service import SubscriptionService 
-from source.infrastructure.database.repository import PaymentRepository
+from aiogram import Bot, Dispatcher
+from aiogram.types import Update
+from dateutil.relativedelta import relativedelta
+from dishka.integrations.fastapi import DishkaRoute, inject
+from dishka.integrations.fastapi import FromDishka
+from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks
+
+from source.application.user import GetUserById, MergeUser
 from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.models.user_model import User
-from source.application.user import GetUserById, MergeUser
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
+from source.infrastructure.database.repository import PaymentRepository
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/parser", route_class=DishkaRoute)
+webhooks_router = APIRouter(prefix="/v1/webhooks", route_class=DishkaRoute)
+
 
 async def process_successful_payment(
-    event_json: Dict[str, Any],
-    payment_repo: PaymentRepository, 
-    get_user_id: GetUserById,
-    merge: MergeUser,
-    bot: Bot
+        event_json: Dict[str, Any],
+        payment_repo: PaymentRepository,
+        get_user_id: GetUserById,
+        merge: MergeUser,
+        bot: Bot
 ):
     """Асинхронная обработка успешной оплаты (в background)."""
     try:
@@ -42,8 +42,8 @@ async def process_successful_payment(
             logger.error(f"PaymentLog not found for {purchase_id}")
             return
 
-        #если уже processed, skip
-        if payment_log.status == 'succeeded': 
+        # если уже processed, skip
+        if payment_log.status == 'succeeded':
             logger.info(f"Payment {purchase_id} already succeeded")
             return
 
@@ -57,12 +57,11 @@ async def process_successful_payment(
             user.subscription_start = now
             user.subscription_date_end = date_end
             user.messages_used = 0
-            user.daily_messages_used = 0 
+            user.daily_messages_used = 0
             await merge(user)  # Merge для сохранения
 
         payment_log.status = 'succeeded'
-        await payment_repo.merge(payment_log) 
-
+        await payment_repo.merge(payment_log)
 
         await bot.send_message(
             chat_id=int(telegram_id),
@@ -74,14 +73,15 @@ async def process_successful_payment(
         logger.error(f"Error processing payment {purchase_id}: {e}")
         # Здесь можно добавить retry или лог в DLQ, но для простоты - log
 
-@router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
+
+@webhooks_router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
 async def handle_yookassa_webhook(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    payment_repo: FromDishka[PaymentRepository],
-    get_by_id: FromDishka[GetUserById],
-    merge: FromDishka[MergeUser],
-    bot: FromDishka[Bot]
+        request: Request,
+        background_tasks: BackgroundTasks,
+        payment_repo: FromDishka[PaymentRepository],
+        get_by_id: FromDishka[GetUserById],
+        merge: FromDishka[MergeUser],
+        bot: FromDishka[Bot]
 ):
     event_json = await request.json()
     logger.info("Webhook received!")
@@ -97,3 +97,24 @@ async def handle_yookassa_webhook(
     )
 
     return {"status": "ok"}
+
+
+@webhooks_router.post("/telegram")
+async def telegram_webhook(request: Request):
+    try:
+        # Get container from app state
+        container = request.app.state.dishka_container
+
+        # Get dependencies manually
+        bot: Bot = await container.get(Bot)
+        dp: Dispatcher = await container.get(Dispatcher)
+
+        update_data = await request.json()
+        update = Update(**update_data)
+
+        await dp.feed_update(bot=bot, update=update, dishka_container=container)
+
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Telegram webhook error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")

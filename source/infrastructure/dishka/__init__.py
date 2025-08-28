@@ -6,40 +6,25 @@ from .bot import BotProvider, DispatcherProvider
 from .config import ConfigProvider
 from .db import DatabaseProvider
 from .interactors import InteractorsProvider
-from .storage_redis import RedisProvider
-from .repositories import RepositoryProvider
 from .neuron import AssistantProvider
 from .payment import PaymentProvider
+from .repositories import RepositoryProvider
+from .storage_redis import RedisProvider
 
 
-def make_bot_container() -> AsyncContainer:
+def make_dishka_container() -> AsyncContainer:
     return make_async_container(
         *[
             RedisProvider(),
             ConfigProvider(),
             DatabaseProvider(),
-            BotProvider(),
-            DispatcherProvider(),
-            InteractorsProvider(),
             RepositoryProvider(),
+            InteractorsProvider(),
             AssistantProvider(),
             PaymentProvider(),
+            BotProvider(),
+            DispatcherProvider(),
             AiogramProvider(),
-        ]
-    )
-
-def make_webhook_container() -> AsyncContainer:
-    return make_async_container(
-        *[
-            RedisProvider(),
-            ConfigProvider(),
-            DatabaseProvider(),
-            BotProvider(),
-            DispatcherProvider(),
-            InteractorsProvider(),
-            RepositoryProvider(),
-            AssistantProvider(),
-            PaymentProvider(),
-            FastapiProvider(),
+            FastapiProvider()
         ]
     )
