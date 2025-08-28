@@ -43,5 +43,5 @@ async def handle_check_in(message: Message, state: FSMContext):
     logger.info(f"No risk for user {message.from_user.id}. Moving to METHOD_SELECT.")
     await state.set_state(SupportStates.METHOD_SELECT)
 
-    text = "Спасибо, что поделился. Хочешь, подберём метод поддержки или просто побудем с этим?"
+    text = "Спасибо за доверие. Хочешь, подберём метод поддержки или просто побудем с этим?"
     await message.answer(text=text, reply_markup=get_support_methods_keyboard())
