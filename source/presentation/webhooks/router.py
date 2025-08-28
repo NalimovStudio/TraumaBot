@@ -9,7 +9,8 @@ from source.application.subscription.subscription_service import SubscriptionSer
 from source.infrastructure.database.repository import PaymentRepository
 from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.models.user_model import User
-from source.application.user import GetUserSchemaById, MergeUser, MergePayment
+from source.application.user import GetUserSchemaById, MergeUser
+from source.application.payment.merge import MergePayment
 from source.core.schemas.user_schema import UserSchema
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -61,7 +62,7 @@ async def process_successful_payment(
             await merge_user(user)  # Merge для сохранения
 
         payment_log.status = 'succeeded'
-        await payment_repo.merge(payment_log) 
+        await merge_payment(payment_log) 
 
 
         await bot.send_message(
@@ -79,7 +80,8 @@ async def handle_yookassa_webhook(
     background_tasks: BackgroundTasks,
     payment_repo: FromDishka[PaymentRepository],
     get_by_id: FromDishka[GetUserSchemaById],
-    merge: FromDishka[MergeUser],
+    merge_payment: FromDishka[MergePayment],
+    merge_user: FromDishka[MergeUser],
     bot: FromDishka[Bot]
 ):
     event_json = await request.json()
@@ -91,7 +93,8 @@ async def handle_yookassa_webhook(
         event_json,
         payment_repo,
         get_by_id,
-        merge,
+        merge_payment,
+        merge_user,
         bot
     )
 
