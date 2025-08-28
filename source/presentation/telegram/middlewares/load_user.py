@@ -23,20 +23,20 @@ class LoadUserMiddleware(BaseMiddleware):
         aiogram_user: TelegramUser = data["event_from_user"]
         
         try:
-            # Manually get container from data dict
-            # We assume it was passed in dp.feed_update(..., dishka_container=container)
             container: AsyncContainer = data["dishka_container"]
             get_user: GetUserSchemaById = await container.get(GetUserSchemaById)
 
-            user = await get_user(str(aiogram_user.id))
+            user: UserSchema = await get_user(str(aiogram_user.id))
 
             if not user:
-                # If user does not exist, create them
                 create_user: CreateUser = await container.get(CreateUser)
-                user = await create_user(
+
+                username_to_save = aiogram_user.username or aiogram_user.full_name
+
+                user: UserSchema = await create_user(
                     UserSchemaRequest(
                         telegram_id=str(aiogram_user.id),
-                        username=aiogram_user.username
+                        username=username_to_save
                     )
                 )
                 logging.info(f"User {aiogram_user.id} created.")
@@ -46,5 +46,4 @@ class LoadUserMiddleware(BaseMiddleware):
                 
         except Exception as e:
             logging.error(f"Error in LoadUserMiddleware for user {aiogram_user.id}: {e}", exc_info=True)
-            # You might want to prevent access if the user can't be loaded/created
-            return None # Or some error message
+            return None

@@ -17,11 +17,9 @@ class LimitCheckMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any],
     ) -> Any:
-        # Check if the event is a message
         if not isinstance(event, Message):
             return await handler(event, data)
 
-        # Skip /start command
         if event.text and event.text.startswith("/start"):
             return await handler(event, data)
         
@@ -40,17 +38,16 @@ class LimitCheckMiddleware(BaseMiddleware):
         if current_state not in limitable_states:
             return await handler(event, data)
 
-        # Manually get container and service
         if "dishka_container" not in data:
             logger.error("Dishka container not found in middleware data!")
-            return await handler(event, data) # Or handle error
+            return await handler(event, data)
             
         container: AsyncContainer = data["dishka_container"]
         subscription_service: SubscriptionService = await container.get(SubscriptionService)
         
         aiogram_user: TelegramUser = data.get("event_from_user")
         if not aiogram_user:
-            return await handler(event, data) # Cannot check limit without a user
+            return await handler(event, data)
         
         telegram_id = str(aiogram_user.id)
         

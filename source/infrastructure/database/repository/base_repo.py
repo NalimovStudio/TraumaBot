@@ -95,7 +95,6 @@ class BaseRepository(Generic[M]):
             raise
         except Exception as e:
             await self.session.rollback()
-            # It's good practice to log the error here
             raise e
 
     async def merge(self, model_schema: S) -> None:

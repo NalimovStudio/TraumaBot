@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 router = Router(name=__name__)
 
-
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     await state.clear()

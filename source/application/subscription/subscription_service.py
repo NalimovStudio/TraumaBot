@@ -60,7 +60,7 @@ class SubscriptionService:
             limit = LIMIT_MESSAGE_FREE
             if modified:
                 await self.merge(user)
-            return user.daily_messages_used > limit  
+            return user.daily_messages_used >= limit  
 
     async def increment_message_count(self, telegram_id: str):
         user: UserSchema = await self.get_by_id(telegram_id)

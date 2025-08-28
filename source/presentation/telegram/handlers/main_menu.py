@@ -1,6 +1,7 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
+from aiogram.filters import StateFilter
 
 from source.core.lexicon.bot import PROFILE_TEXT, HELP_TEXT, SUBSCRIPTION_MENU_TEXT
 from source.presentation.telegram.keyboards.keyboards import (
@@ -122,3 +123,11 @@ async def handle_profile(message: Message, user: UserSchema | None = None):
         subscription_type=subscription_info,
     )
     await message.answer(text=text)
+
+@router.message(F.text, StateFilter(None))
+async def handle_unknown_message_no_state(message: Message):
+    """Вылавливает сообщение которые не в стейтах и в меню кидает"""
+    await message.answer(
+        text="Я не совсем понимаю, что ты имеешь в виду. Давай вернемся в главное меню, чтобы ты мог выбрать, что делать дальше.",
+        reply_markup=get_main_keyboard()
+    )

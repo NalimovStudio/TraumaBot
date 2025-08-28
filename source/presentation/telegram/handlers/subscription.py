@@ -27,6 +27,7 @@ from source.presentation.telegram.keyboards.keyboards import (
     get_subscriptions_menu_keyboard,
     get_standard_subscription_options_keyboard,
     get_pro_subscription_options_keyboard,
+    get_main_keyboard
 )
 from source.application.payment.payment_service import PaymentService
 from source.presentation.telegram.states.user_states import SupportStates
@@ -129,5 +130,8 @@ async def process_contact(message: Message, state: FSMContext, **data):
         "Нажми на кнопку ниже, чтобы перейти к оплате:",
         reply_markup=keyboard
     )
-    await message.answer("Спасибо!", reply_markup=ReplyKeyboardRemove())
+    await message.answer(
+        "После успешной оплаты ваша подписка будет активирована. Возвращаю в главное меню.",
+        reply_markup=get_main_keyboard()
+    )
     await state.clear()
