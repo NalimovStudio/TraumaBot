@@ -25,7 +25,7 @@ class AssistantClient:
 
         # Добавление контекста
         for context_message in context_messages:
-            logger.info("Context message: \n" + context_message.get_message_to_deepseek())
+            logger.info(context_message.get_message_to_deepseek())
             messages.append(context_message.get_message_to_deepseek())
 
         # Добавление последнего сообщения 

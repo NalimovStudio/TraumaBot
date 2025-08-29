@@ -1,24 +1,22 @@
+import logging
+
 from aiogram import F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
-from aiogram.filters import StateFilter
 
+from source.core.enum import SubscriptionType
 from source.core.lexicon.bot import PROFILE_TEXT, HELP_TEXT, SUBSCRIPTION_MENU_TEXT
+from source.core.schemas.user_schema import UserSchema
+from source.presentation.telegram.callbacks.method_callbacks import HelpCallback
 from source.presentation.telegram.keyboards.keyboards import (
     ButtonText,
     get_subscriptions_menu_keyboard,
     get_help_keyboard,
     get_support_methods_keyboard,
-    get_back_to_menu_keyboard,
     get_main_keyboard
 )
-from source.core.schemas.user_schema import UserSchema
-from source.core.enum import SubscriptionType
-from source.presentation.telegram.callbacks.method_callbacks import HelpCallback
 from source.presentation.telegram.states.user_states import SupportStates
-
-import logging
-
 
 router = Router(name=__name__)
 logger = logging.getLogger(__name__)
@@ -35,21 +33,21 @@ async def handle_back_to_help(query: CallbackQuery, state: FSMContext):
     )
     await query.message.delete()
 
+
 @router.callback_query(HelpCallback.filter(F.menu == "start_dialog"))
 async def handle_start_dialog_from_help(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} started a new dialog from help menu.")
     await query.answer()
     await state.set_state(SupportStates.CHECK_IN)
-    
 
     await query.message.delete()
-    
 
     await query.message.answer(
         text="Как ты себя чувствуешь сейчас?"
-        "Оцени по шкале от 1 до 10",
+             "Оцени по шкале от 1 до 10",
         reply_markup=ReplyKeyboardRemove()
     )
+
 
 @router.callback_query(HelpCallback.filter(F.menu == "methods"))
 async def handle_support_methods(query: CallbackQuery, state: FSMContext):
@@ -61,6 +59,7 @@ async def handle_support_methods(query: CallbackQuery, state: FSMContext):
         text="Какой метод поддержки ты бы хотел использовать?",
         reply_markup=get_support_methods_keyboard(),
     )
+
 
 @router.message(F.text == "Вернуться в меню")
 async def handle_back_to_main_menu(message: Message, state: FSMContext):
@@ -113,7 +112,7 @@ async def handle_profile(message: Message, user: UserSchema | None = None):
             sub_type_str = "Pro"
         else:
             sub_type_str = "Неизвестный тип"
-            
+
         date_end_str = user.subscription_date_end.strftime("%d.%m.%Y")
         subscription_info = f"{sub_type_str} (до {date_end_str})"
 
@@ -123,6 +122,7 @@ async def handle_profile(message: Message, user: UserSchema | None = None):
         subscription_type=subscription_info,
     )
     await message.answer(text=text)
+
 
 @router.message(F.text, StateFilter(None))
 async def handle_unknown_message_no_state(message: Message):

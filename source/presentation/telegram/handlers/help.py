@@ -2,10 +2,9 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 
-from source.core.lexicon.bot import SUBSCRIPTION_MENU_TEXT, HELP_TEXT
+from source.core.lexicon.bot import HELP_TEXT
 from source.presentation.telegram.callbacks.method_callbacks import HelpCallback
 from source.presentation.telegram.keyboards.keyboards import (
-    get_subscriptions_menu_keyboard,
     get_support_methods_keyboard,
     get_help_keyboard,
 )
@@ -33,8 +32,6 @@ async def handle_help_support_methods(query: CallbackQuery, state: FSMContext):
         text=text, reply_markup=get_support_methods_keyboard()
     )
     await query.answer()
-
-
 
 
 @router.callback_query(HelpCallback.filter(F.menu == "back"))
