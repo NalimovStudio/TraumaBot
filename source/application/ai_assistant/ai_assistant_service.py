@@ -13,7 +13,7 @@ class AssistantService(AssistantServiceInterface):
             message: str,
             context_messages: list[ContextMessage] = [],
             prompt: str = GET_CALM_PROMPT,
-            temperature=0.4
+            temperature=0.3
     ) -> AssistantResponse:
         return await self.client.get_response(
             system_prompt=prompt,
@@ -38,7 +38,7 @@ class AssistantService(AssistantServiceInterface):
             self,
             message: str,
             context_messages: list[ContextMessage] = [],
-            temperature: float = 0.65,
+            temperature: float = 0.3,
             prompt: str = PROBLEMS_SOLVER_PROMPT
     ) -> AssistantResponse:
         return await self.client.get_response(
@@ -53,8 +53,23 @@ class AssistantService(AssistantServiceInterface):
             message: str,
             prompt: str = SPEAK_OUT_PROMPT,
             context_messages: list[ContextMessage] = [],
-            temperature = 0.4
+            temperature = 0.3
     ) -> AssistantResponse:
+        return await self.client.get_response(
+            system_prompt=prompt,
+            message=message,
+            context_messages=context_messages,
+            temperature=temperature
+        )
+
+    async def get_blackpill_exit_response(
+            self,
+            message: str,
+            prompt: str = SPEAK_OUT_PROMPT,
+            context_messages: list[ContextMessage] = [],
+            temperature=0.3
+    ) -> AssistantResponse:
+        """Возвращает ответ ассистента в режиме ВЫХОД ИЗ БЛЕКПИЛЛ"""
         return await self.client.get_response(
             system_prompt=prompt,
             message=message,

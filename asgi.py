@@ -53,7 +53,9 @@ async def lifespan(app: FastAPI):
         if not secret:
             raise ValueError("TELEGRAM_WEBHOOK_SECRET is not set in environment variables")
 
-        webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
+        # TODO
+        # webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
+        webhook_url = f"https://траума.рф/v1/webhooks/telegram/"
 
         success = await set_webhook_with_retry(bot, webhook_url)
         if not success:
