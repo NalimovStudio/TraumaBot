@@ -157,12 +157,11 @@ jobs:
             LOG_LEVEL=INFO
             ENV_EOF
 
-      - name: Clean old images
+      - name: Cleanup Docker
         run: |
-          echo "Running Docker cleanup..."
-          chmod +x cleanup_docker.sh
-          ./cleanup_docker.sh
-      
+          docker builder prune -f -a
+          docker rmi -f $(docker images -aq) 2>/dev/null || true
+
       - name: Deploy with Docker Compose
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'

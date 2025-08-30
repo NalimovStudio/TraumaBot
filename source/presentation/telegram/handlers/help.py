@@ -15,10 +15,11 @@ router = Router(name=__name__)
 
 @router.callback_query(HelpCallback.filter(F.menu == "start_dialog"))
 async def handle_help_start_dialog(query: CallbackQuery, state: FSMContext):
+    # TODO (Влад): если запись за этот день уже есть, пропускать handler и сразу вызывать handle_help_support_methods
+
     await state.set_state(SupportStates.CHECK_IN)
     text = (
-        "Как ты себя чувствуешь сейчас? "
-        "Оцени по шкале от 1 до 10"
+        "Оцени, как ты себя чувствуешь, по шкале от 1 до 10."
     )
     await query.message.answer(text=text, reply_markup=ReplyKeyboardRemove())
     await query.answer()

@@ -30,7 +30,7 @@ class AssistantServiceInterface(ABC):
             message: str,
             prompt: str,
             context_messages: list[ContextMessage],
-            temperature: float = 0.4
+            temperature: float = 0.65
     ) -> AssistantResponse:
         """Решение проблем. Строгий промпт, ниже температура."""
         pass

@@ -42,6 +42,7 @@ async def handle_start_dialog_from_help(query: CallbackQuery, state: FSMContext)
 
     await query.message.delete()
 
+    # TODO (Влад): если запись за этот день уже есть, пропускать handler и сразу вызывать handle_help_support_methods
     await query.message.answer(
         text="Как ты себя чувствуешь сейчас?"
              "Оцени по шкале от 1 до 10",
@@ -74,6 +75,7 @@ async def handle_back_to_main_menu(message: Message, state: FSMContext):
 @router.message(F.text == ButtonText.START_DIALOG)
 async def handle_start_dialog(message: Message, state: FSMContext):
     await state.set_state(SupportStates.CHECK_IN)
+    # TODO (Влад): если запись за этот день уже есть, пропускать handler и сразу вызывать handle_help_support_methods
     text = (
         "Как ты себя чувствуешь сейчас? "
         "Оцени по шкале от 1 до 10"
@@ -104,12 +106,12 @@ async def handle_profile(message: Message, user: UserSchema | None = None):
         )
         return
 
-    subscription_info = "Бесплатная"
+    subscription_info = "Без подписки"
     if user.subscription != SubscriptionType.FREE and user.subscription_date_end:
         if user.subscription == SubscriptionType.DEFAULT:
-            sub_type_str = "Стандарт"
+            sub_type_str = "Стандарт 👑"
         elif user.subscription == SubscriptionType.PRO:
-            sub_type_str = "Pro"
+            sub_type_str = "Pro 💎"
         else:
             sub_type_str = "Неизвестный тип"
 

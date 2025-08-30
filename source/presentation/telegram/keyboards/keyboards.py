@@ -109,12 +109,12 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
 def get_support_methods_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=ButtonText.CALM_DOWN,
-                    callback_data=MethodCallback(name="calm").pack(),
-                )
-            ],
+            #[
+            #    InlineKeyboardButton(
+            #        text=ButtonText.CALM_DOWN,
+            #        callback_data=MethodCallback(name="calm").pack(),
+            #    )
+            # ],
             # TODO: Раскоментировать данный блок что бы вернуть Дневник эмоций
             # [
             #     InlineKeyboardButton(
