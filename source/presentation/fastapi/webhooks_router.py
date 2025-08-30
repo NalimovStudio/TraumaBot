@@ -6,7 +6,7 @@ from typing import Dict, Any
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from dateutil.relativedelta import relativedelta
-from dishka.integrations.fastapi import DishkaRoute, inject
+from dishka.integrations.fastapi import DishkaRoute
 from dishka.integrations.fastapi import FromDishka
 from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends
 

@@ -49,10 +49,10 @@ async def lifespan(app: FastAPI):
         dp: Dispatcher = await dishka_container.get(Dispatcher)
 
         # install webhook secret
+        secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
+        if not secret:
+            raise ValueError("TELEGRAM_WEBHOOK_SECRET is not set in environment variables")
 
-        secret = OnlyTelegramNetworkWithSecret(
-            real_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET")
-        )
         webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
 
         success = await set_webhook_with_retry(bot, webhook_url)
