@@ -146,7 +146,9 @@ jobs:
             WEB_HOST=${{ secrets.WEB_HOST }}
             WEB_PORT=${{ secrets.WEB_PORT }}
             DOMAIN=${{ secrets.DOMAIN }}
+          
             TELEGRAM_WEBHOOK_URL=${{ secrets.TELEGRAM_WEBHOOK_URL }}
+            TELEGRAM_WEBHOOK_SECRET=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
           
             STORE_ID=${{ secrets.STORE_ID }}
             STORE_TOKEN=${{ secrets.STORE_TOKEN }}
