@@ -72,7 +72,7 @@ services:
       - "traefik.http.routers.acme.rule=Host(`xn--80aa9aoji.xn--p1ai`) && PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.acme.entrypoints=web"
       - "traefik.http.routers.acme.priority=1000"
-      - "traefik.docker.network=traumabot_traefik_network"
+      - "traefik.docker.network=traefik_network"
     env_file:
       - .env
     depends_on:
