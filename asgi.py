@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI):
 
         # TODO
         # webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
-        webhook_url = f"https://траума.рф/v1/webhooks/telegram/"
+        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL")
 
         success = await set_webhook_with_retry(bot, webhook_url)
         if not success:

@@ -18,7 +18,7 @@ class GetUserSchemaById(Interactor[str, S]):
     async def __call__(self, telegram_id: str) -> S:
         try:
             async with self.uow:
-                user: UserSchema = await self.repository.get_by_telegram_id(
+                user: UserSchema = await self.repository.get_schema_by_telegram_id(
                     telegram_id
                 )
                 await self.uow.commit() 

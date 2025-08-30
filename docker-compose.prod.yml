@@ -6,7 +6,7 @@ services:
     restart: always
     container_name: postgres
     environment:
-      POSTGRES_DB: ${DB_PATH}
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
@@ -14,7 +14,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d psychoAI_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,7 +28,7 @@ services:
     image: redis:7-alpine
     restart: always
     container_name: redis
-    command: redis-server --requirepass admin
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
       - "0.0.0.0:6379:6379"
     volumes:
@@ -59,19 +59,18 @@ services:
       - "traefik.http.routers.psychoai-web.tls.certresolver=letsencrypt"
       - "traefik.http.routers.psychoai-web.tls.domains[0].main=xn--80aa9aoji.xn--p1ai"
       - "traefik.http.services.psychoai-web.loadbalancer.server.port=8000"
-      - "traefik.http.routers.psychoai-web.middlewares=real-ip" # Убрали redirect-to-https
-      - "traefik.http.middlewares.real-ip.headers.customrequestheaders.X-Real-IP=$remote_addr"
-      - "traefik.http.middlewares.real-ip.headers.customrequestheaders.X-Forwarded-For=$remote_addr"
       # Редирект с HTTP на HTTPS
       - "traefik.http.routers.psychoai-web-http.rule=Host(`xn--80aa9aoji.xn--p1ai`) && !PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.psychoai-web-http.entrypoints=web"
-      - "traefik.http.routers.psychoai-web-http.middlewares=real-ip,redirect-to-https" # Добавили real-ip
+      - "traefik.http.routers.psychoai-web-http.middlewares=redirect-to-https"
+      # Middleware для редиректа
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       # ACME
       - "traefik.http.routers.acme.rule=Host(`xn--80aa9aoji.xn--p1ai`) && PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.acme.entrypoints=web"
       - "traefik.http.routers.acme.priority=1000"
+      # docker network
       - "traefik.docker.network=traumabot_traefik_network"
     env_file:
       - .env

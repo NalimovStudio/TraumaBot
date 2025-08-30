@@ -28,8 +28,8 @@ class ButtonText:
     BACK_TO_HELP = "Назад к помощи ↩️"
 
     # Subscription
-    BUY_STANDARD = "Купить Стандарт 💎"
-    BUY_PRO = "Купить Pro ⭐"
+    BUY_STANDARD = "Купить Стандарт 👑"
+    BUY_PRO = "Купить Pro 💎"
 
     SUB_STANDART_1_MONTH = "1 месяц/379₽"
     SUB_STANDART_1_MONTH_PRICE = "379.00"

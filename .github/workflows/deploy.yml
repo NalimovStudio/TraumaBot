@@ -2,12 +2,14 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [ dev_arsen ]
+    branches: [ main, dev_arsen, dev_red ]
   workflow_dispatch:
 
 jobs:
   test:
+    # в тестах на машине гитхаба клонируется проект и запускаются автотесты
     runs-on: ubuntu-latest
+    environment: staging
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,14 +20,14 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install Poetry
+      - name: Install dependencies with Poetry
         run: |
           pip install poetry
-
-      - name: Configure Poetry
-        run: |
+          
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
+          
+          poetry install --no-interaction --no-ansi
 
       - name: Create test .env file
         run: |
@@ -38,7 +40,6 @@ jobs:
           DB_NAME=test_db
           DB_USER=test_user
           DB_PASSWORD=test_password
-          DB_PATH=
           
           REDIS_HOST=localhost
           REDIS_PORT=6379
@@ -52,60 +53,39 @@ jobs:
           LOG_LEVEL=DEBUG
           EOF
 
-      - name: Install dependencies with Poetry
-        run: |
-          poetry install --no-interaction --no-ansi
-
       - name: Run unit tests with Poetry
         run: |
           poetry run pytest tests/ -v --tb=short
 
-
-
   deploy:
+    # Deploy to (TEST | PROD) VDS
+    # environment depends on github.ref
     runs-on: ubuntu-latest
     needs: test
-    if: success()
+    if: needs.test.result == 'success'
+    environment:
+      name: ${{ contains(github.ref, 'dev_') && 'staging' || 'production' }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}  # Автоматически доступен в GitHub Actions
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup SSH key
         run: |
-          # Создаем .ssh папку
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
+          
+          echo "${{ secrets.SSH_PRIVATE_KEY }}
+          echo "${{ secrets.SSH_HOST }}
 
-          # Сохраняем приватный ключ из GitHub Secrets
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_action_key
           chmod 600 ~/.ssh/github_action_key
 
-          # Добавляем хост в known_hosts
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-
-          # Проверяем что файл создался
-          ls -la ~/.ssh/
-          echo "=== Key content start ==="
-          cat ~/.ssh/github_action_key
-          echo "=== Key content end ==="
-
-      - name: Verify exact key match
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/temp_key
-          chmod 600 ~/.ssh/temp_key
-          
-          # Проверяем fingerprint (самая точная проверка)
-          GENERATED_FINGERPRINT=$(ssh-keygen -l -f ~/.ssh/temp_key | awk '{print $2}')
-          echo "Generated fingerprint: $GENERATED_FINGERPRINT"
-
-      - name: Test SSH connection
-        run: |
-          echo "Testing SSH connection..."
-          ssh -v -i ~/.ssh/github_action_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo '✅ SSH connection successful'"
 
       - name: Copy files with rsync
         run: |
@@ -124,96 +104,75 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/app/TraumaBot
-            cat > .env << 'ENV_EOF'
-            DB_DRIVER=${{ secrets.DB_DRIVER }}
-            DB_SYSTEM=${{ secrets.DB_SYSTEM }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_NAME=${{ secrets.DB_NAME || 'psychoAI_db' }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_PATH=${{ secrets.DB_PATH }}
+            echo "DB_DRIVER=${{ secrets.DB_DRIVER }}" > .env
+            echo "DB_SYSTEM=${{ secrets.DB_SYSTEM }}" >> .env
+            echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+            echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+            echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=${{ secrets.REDIS_PORT }}
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-            REDIS_DATABASE=${{ secrets.REDIS_DATABASE }}
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
+            echo "REDIS_DATABASE=${{ secrets.REDIS_DATABASE }}" >> .env
           
-            TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
-            ASSISTANT_API_KEY=${{ secrets.ASSISTANT_API_KEY }}
+            echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" >> .env
+            echo "ASSISTANT_API_KEY=${{ secrets.ASSISTANT_API_KEY }}" >> .env
           
-            YOOKASSA_WEBHOOK_URL=${{ secrets.YOOKASSA_WEBHOOK_URL }}
-            WEB_HOST=${{ secrets.WEB_HOST }}
-            WEB_PORT=${{ secrets.WEB_PORT }}
-            DOMAIN=${{ secrets.DOMAIN }}
+            echo "YOOKASSA_WEBHOOK_URL=${{ secrets.YOOKASSA_WEBHOOK_URL }}" >> .env
+            echo "WEB_HOST=${{ secrets.WEB_HOST }}" >> .env
+            echo "WEB_PORT=${{ secrets.WEB_PORT }}" >> .env
+            echo "DOMAIN=${{ secrets.DOMAIN }}" >> .env
           
-            TELEGRAM_WEBHOOK_URL=${{ secrets.TELEGRAM_WEBHOOK_URL }}
-            TELEGRAM_WEBHOOK_SECRET=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+            echo "TELEGRAM_WEBHOOK_URL=${{ secrets.TELEGRAM_WEBHOOK_URL }}" >> .env
+            echo "TELEGRAM_WEBHOOK_SECRET=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}" >> .env
           
-            STORE_ID=${{ secrets.STORE_ID }}
-            STORE_TOKEN=${{ secrets.STORE_TOKEN }}
-          
-            ENVIRONMENT=production
-            LOG_LEVEL=INFO
-            ENV_EOF
+            echo "STORE_ID=${{ secrets.STORE_ID }}" >> .env
+            echo "STORE_TOKEN=${{ secrets.STORE_TOKEN }}" >> .env
+            
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo ENVIRONMENT=development >> .env
+            else
+              echo ENVIRONMENT=staging >> .env
+            fi
+            echo LOG_LEVEL=INFO >> .env
+          EOF
 
-      - name: Cleanup Docker
+      - name: Determine compose file
+        id: compose
         run: |
-          docker builder prune -f -a
-          docker rmi -f $(docker images -aq) 2>/dev/null || true
+          COMPOSE_FILE="docker-compose.staging.yml"
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            COMPOSE_FILE="docker-compose.prod.yml"
+          fi
+          
+          echo "COMPOSE_FILE=$COMPOSE_FILE" >> $GITHUB_OUTPUT
+          echo "Selected: $COMPOSE_FILE"
 
-      - name: Deploy with Docker Compose
+      - name: Deploy with Docker Compose with Cleanup (with overcommit check for Staging)
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<- 'EOF'
             cd ~/app/TraumaBot
-            docker-compose down
-            docker-compose pull
-            docker-compose build --no-cache
-            docker-compose up -d
+          
+            # Cleanup docker cache
+            docker builder prune -f -a
+            docker image prune -f -a
+          
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} down
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} pull
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} build --no-cache
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} up -d
                   
             sleep 15
             echo "=== Container status ==="
-            docker-compose ps
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} ps
             echo "=== Recent logs ==="
-            docker-compose logs --tail=30
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} logs --tail=15
           EOF
-
       - name: Run Alembic migrations
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/app/TraumaBot
-            
-            echo "⏳ Waiting for database..."
-            for i in {1..10}; do
-              if docker-compose exec -T db pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME || 'psychoAI_db' }}; then
-                echo "🚀 Running Alembic migrations..."
-                docker-compose exec -T fastapi poetry run alembic upgrade head
-                echo "✅ Migrations completed"
-                echo "✅ Database is ready!"
-                break
-              fi
-              sleep 3
-            done
-          EOF
-
-      - name: Health check after deploy
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd ~/app/TraumaBot
-            echo "=== Running containers ==="
-            docker-compose ps | grep -v "Exit"
-            
-            echo "=== Error check ==="
-            docker-compose logs --tail=50 | grep -i "error\|exception\|fail" || echo "✓ No errors found"
-            
-            echo "=== PostgreSQL health check ==="
-            docker-compose exec -T db pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME || 'psychoAI_db' }} && echo "✓ PostgreSQL is healthy"
-            
-            echo "=== .env file check ==="
-            if [ -f .env ]; then
-              echo "✓ .env file exists"
-              cat .env | sed 's/=.*/=***/' | head -10
-            else
-              echo "✗ .env file missing"
-            fi
+            docker exec fastapi poetry run alembic upgrade head
           EOF

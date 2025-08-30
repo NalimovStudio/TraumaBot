@@ -109,7 +109,7 @@ webhook_security = OnlyTelegramNetworkWithSecret(
 
 # @webhooks_router.post("/telegram/{secret}", dependencies=[Depends(webhook_security)])
 @webhooks_router.post("/telegram")
-async def telegram_webhook(request: Request, secret: str):
+async def telegram_webhook(request: Request):
     try:
         # Get container from app state
         container = request.app.state.dishka_container

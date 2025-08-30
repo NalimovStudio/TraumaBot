@@ -10,7 +10,7 @@ class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=User, session=session)
 
-    async def get_by_telegram_id(self, telegram_id: str) -> UserSchema | None:
+    async def get_schema_by_telegram_id(self, telegram_id: str) -> UserSchema | None:
         stmt: Select = select(self.model).where(self.model.telegram_id == telegram_id)
         result = await self.session.execute(stmt)
         model: User = result.scalar_one_or_none()
