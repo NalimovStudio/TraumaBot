@@ -49,8 +49,6 @@ class ButtonText:
     SUB_PRO_12_MONTHS = "1 год/8899₽"
     SUB_PRO_12_MONTHS_PRICE = "8899.00"
 
-
-
     BACK = "Назад ↩️"
 
     # Inline Keyboard - Methods
@@ -59,7 +57,7 @@ class ButtonText:
     # CBT_DIARY = "КПТ (Дневник эмоций)"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     VENT_OUT = "Высказаться"
-    BLACKPILL_EXIT = "⚫<b> Выход из Блекпилл </b>"
+    BLACKPILL_EXIT = "⚫ Выход из Блекпилл"
 
     # Inline Keyboard - Blackpill Exit
     READY = "Готов"
@@ -113,7 +111,7 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
 def get_support_methods_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            #[
+            # [
             #    InlineKeyboardButton(
             #        text=ButtonText.CALM_DOWN,
             #        callback_data=MethodCallback(name="calm").pack(),
@@ -176,7 +174,8 @@ def get_calming_keyboard() -> InlineKeyboardMarkup:
         ]
     )
 
-def get_blackpill_exit_question_keyboard() -> InlineKeyboardMarkup:
+
+def get_blackpill_exit_ready_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -187,6 +186,7 @@ def get_blackpill_exit_question_keyboard() -> InlineKeyboardMarkup:
             ]
         ]
     )
+
 
 def get_venting_summary_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(

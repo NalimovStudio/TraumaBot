@@ -11,8 +11,8 @@ from source.application.message_history.message_history_service import MessageHi
 from source.application.subscription.subscription_service import SubscriptionService
 from source.core.lexicon.bot import BLACKPILL_EXIT_TEXT, BLACKPILL_AFTER_READY_TEXT_ARRAY
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
-from source.presentation.telegram.keyboards.keyboards import get_blackpill_exit_question_keyboard
+from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, BlackpillCallback
+from source.presentation.telegram.keyboards.keyboards import get_blackpill_exit_ready_keyboard
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, \
     get_back_to_menu_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
@@ -26,11 +26,11 @@ router = Router(name=__name__)
 async def handle_blackpill_method(callback: CallbackQuery, state: FSMContext):
     logger.info(f"User {callback.from_user.id} chose blackpill method")
     await state.set_state(SupportStates.BLACKPILL)
-    await callback.message.edit_text(BLACKPILL_EXIT_TEXT, reply_markup=get_blackpill_exit_question_keyboard())
+    await callback.message.edit_text(BLACKPILL_EXIT_TEXT, reply_markup=get_blackpill_exit_ready_keyboard())
     await callback.answer()
 
 
-@router.callback_query(MethodCallback.filter(), SupportStates.BLACKPILL)
+@router.callback_query(BlackpillCallback.filter(), SupportStates.BLACKPILL)
 async def handle_ready_callback(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(random.choice(BLACKPILL_AFTER_READY_TEXT_ARRAY))
     await callback.answer()
