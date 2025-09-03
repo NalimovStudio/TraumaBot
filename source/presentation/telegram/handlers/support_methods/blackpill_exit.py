@@ -9,7 +9,7 @@ from dishka import AsyncContainer
 from source.application.ai_assistant.ai_assistant_service import AssistantService
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.application.subscription.subscription_service import SubscriptionService
-from source.core.lexicon.bot import BLACKPILL_EXIT_TEXT, BLACKPILL_AFTER_READY_TEXT_ARRAY
+from source.core.lexicon.bot import BLACKPILL_EXIT_TEXT, BLACKPILL_AFTER_READY_TEXT_ARRAY, ASSISTANT_WAITING_TEXT
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, BlackpillCallback
 from source.presentation.telegram.keyboards.keyboards import get_blackpill_exit_ready_keyboard
@@ -50,6 +50,8 @@ async def handle_blackpill_talking(message: Message, state: FSMContext, bot: Bot
         await history.clear_history(user_id, context_scope)
         await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())
         return
+
+    await bot.send_message(message.chat.id, ASSISTANT_WAITING_TEXT, parse_mode="HTML")
 
     user_message_context = ContextMessage(role="user", message=message.text)
     await history.add_message_to_history(user_id, context_scope, user_message_context)
