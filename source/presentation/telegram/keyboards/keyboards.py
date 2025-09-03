@@ -59,7 +59,7 @@ class ButtonText:
     # CBT_DIARY = "КПТ (Дневник эмоций)"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     VENT_OUT = "Высказаться"
-    BLACKPILL_EXIT = "Выход из Блекпилл"
+    BLACKPILL_EXIT = "⚫<b> Выход из Блекпилл </b>"
 
     # Inline Keyboard - Blackpill Exit
     READY = "Готов"
