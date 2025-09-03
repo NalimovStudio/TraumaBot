@@ -8,4 +8,5 @@ __all__ = [
     "cbt_router",
     "problem_solving_router",
     "venting_router",
+    "blackpill_exit"
 ]

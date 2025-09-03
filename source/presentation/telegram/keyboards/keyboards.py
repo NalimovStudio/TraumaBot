@@ -11,7 +11,7 @@ from source.presentation.telegram.callbacks.method_callbacks import (
     VentingCallback,
     SubscriptionCallback,
     ProblemSolvingCallback,
-    HelpCallback,
+    HelpCallback, BlackpillCallback,
 )
 
 
@@ -59,6 +59,10 @@ class ButtonText:
     # CBT_DIARY = "КПТ (Дневник эмоций)"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     VENT_OUT = "Высказаться"
+    BLACKPILL_EXIT = "Выход из Блекпилл"
+
+    # Inline Keyboard - Blackpill Exit
+    READY = "Готов"
 
     # Inline Keyboard - Calming flow
     ANOTHER_CYCLE = "ещё 1 цикл"
@@ -124,6 +128,12 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
             # ],
             [
                 InlineKeyboardButton(
+                    text=ButtonText.BLACKPILL_EXIT,
+                    callback_data=MethodCallback(name="blackpill_exit").pack()
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text=ButtonText.PROBLEM_SOLVING,
                     callback_data=MethodCallback(name="problem").pack(),
                 )
@@ -166,6 +176,17 @@ def get_calming_keyboard() -> InlineKeyboardMarkup:
         ]
     )
 
+def get_blackpill_exit_question_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.READY,
+                    callback_data=BlackpillCallback(action="ready").pack()
+                )
+            ]
+        ]
+    )
 
 def get_venting_summary_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
