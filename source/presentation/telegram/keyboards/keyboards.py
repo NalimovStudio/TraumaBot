@@ -11,7 +11,7 @@ from source.presentation.telegram.callbacks.method_callbacks import (
     VentingCallback,
     SubscriptionCallback,
     ProblemSolvingCallback,
-    HelpCallback,
+    HelpCallback, BlackpillCallback,
 )
 
 
@@ -49,8 +49,6 @@ class ButtonText:
     SUB_PRO_12_MONTHS = "1 год/8899₽"
     SUB_PRO_12_MONTHS_PRICE = "8899.00"
 
-
-
     BACK = "Назад ↩️"
 
     # Inline Keyboard - Methods
@@ -59,6 +57,10 @@ class ButtonText:
     # CBT_DIARY = "КПТ (Дневник эмоций)"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     VENT_OUT = "Высказаться"
+    BLACKPILL_EXIT = "⚫ Выход из Блекпилл"
+
+    # Inline Keyboard - Blackpill Exit
+    READY = "Готов"
 
     # Inline Keyboard - Calming flow
     ANOTHER_CYCLE = "ещё 1 цикл"
@@ -109,7 +111,7 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
 def get_support_methods_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            #[
+            # [
             #    InlineKeyboardButton(
             #        text=ButtonText.CALM_DOWN,
             #        callback_data=MethodCallback(name="calm").pack(),
@@ -122,6 +124,12 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
             #         callback_data=MethodCallback(name="cbt").pack(),
             #     )
             # ],
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.BLACKPILL_EXIT,
+                    callback_data=MethodCallback(name="blackpill_exit").pack()
+                )
+            ],
             [
                 InlineKeyboardButton(
                     text=ButtonText.PROBLEM_SOLVING,
@@ -163,6 +171,19 @@ def get_calming_keyboard() -> InlineKeyboardMarkup:
                     callback_data=CalmingCallback(action="to_talk").pack(),
                 )
             ],
+        ]
+    )
+
+
+def get_blackpill_exit_ready_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.READY,
+                    callback_data=BlackpillCallback(action="ready").pack()
+                )
+            ]
         ]
     )
 

@@ -10,6 +10,7 @@ from .support_methods import (
     cbt_router,
     problem_solving_router,
     venting_router,
+    blackpill_exit_router
 )
 
 handlers_router = Router(name="main_handlers_router")
@@ -32,6 +33,7 @@ handlers_router.include_routers(
     cbt_router,
     problem_solving_router,
     venting_router,
+    blackpill_exit_router,
     # Протокол безопасности (срабатывает только в своем состоянии)
     risk_protocol_router,
 )
