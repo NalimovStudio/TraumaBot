@@ -1,5 +1,6 @@
 from source.application.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
-from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT
+from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT, \
+    BLACKPILL_EXIT_PROMPT
 from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
 from source.infrastructure.ai_assistant.ai_assistant import AssistantClient
 
@@ -65,7 +66,7 @@ class AssistantService(AssistantServiceInterface):
     async def get_blackpill_exit_response(
             self,
             message: str,
-            prompt: str = SPEAK_OUT_PROMPT,
+            prompt: str = BLACKPILL_EXIT_PROMPT,
             context_messages: list[ContextMessage] = [],
             temperature=0.3
     ) -> AssistantResponse:
