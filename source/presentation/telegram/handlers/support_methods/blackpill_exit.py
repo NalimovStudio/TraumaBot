@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 
-@router.callback_query(MethodCallback.filter(F.data == "blackpill_exit"), SupportStates.METHOD_SELECT)
+@router.callback_query(MethodCallback.filter(F.name == "blackpill_exit"), SupportStates.METHOD_SELECT)
 async def handle_blackpill_method(callback: CallbackQuery, state: FSMContext):
     logger.info(f"User {callback.from_user.id} chose blackpill method")
     await state.set_state(SupportStates.BLACKPILL)
