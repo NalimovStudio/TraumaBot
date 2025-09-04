@@ -1,10 +1,9 @@
-from dataclasses import dataclass
 from typing import TypeVar
 
 from pydantic import BaseModel as BaseModelSchema
 
-
 from source.application.base import Interactor
+from source.core.schemas.user_schema import UserSchema
 from source.infrastructure.database.repository import UserRepository
 from source.infrastructure.database.uow import UnitOfWork
 
@@ -19,7 +18,7 @@ class GetUserSchemaById(Interactor[str, S]):
     async def __call__(self, telegram_id: str) -> S:
         try:
             async with self.uow:
-                user = await self.repository.get_by_telegram_id(
+                user: UserSchema = await self.repository.get_schema_by_telegram_id(
                     telegram_id
                 )
                 await self.uow.commit() 

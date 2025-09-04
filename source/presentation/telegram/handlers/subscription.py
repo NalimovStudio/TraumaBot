@@ -1,27 +1,24 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     ReplyKeyboardMarkup,
     KeyboardButton,
     CallbackQuery,
-    Message,
-    ReplyKeyboardRemove
+    Message
 )
-from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
 from dishka import AsyncContainer
 
-from source.core.schemas.user_schema import UserSchema
+from source.application.payment.payment_service import PaymentService
 from source.core.enum import SubscriptionType
-
-
 from source.core.lexicon.bot import (
     SUBSCRIPTION_MENU_TEXT,
     STANDARD_SUB_DETAIL_TEXT,
     PRO_SUB_DETAIL_TEXT,
 )
+from source.core.schemas.user_schema import UserSchema
 from source.presentation.telegram.callbacks.method_callbacks import SubscriptionCallback
 from source.presentation.telegram.keyboards.keyboards import (
     get_subscriptions_menu_keyboard,
@@ -29,9 +26,7 @@ from source.presentation.telegram.keyboards.keyboards import (
     get_pro_subscription_options_keyboard,
     get_main_keyboard
 )
-from source.application.payment.payment_service import PaymentService
 from source.presentation.telegram.states.user_states import SupportStates
-
 
 router = Router(name=__name__)
 
@@ -62,8 +57,10 @@ async def handle_pro_sub_menu(query: CallbackQuery):
     )
     await query.answer()
 
+
 @router.callback_query(SubscriptionCallback.filter(F.menu == "buy"))
-async def handle_buy_subscription(query: CallbackQuery, callback_data: SubscriptionCallback, user: UserSchema, state: FSMContext, **data):
+async def handle_buy_subscription(query: CallbackQuery, callback_data: SubscriptionCallback, user: UserSchema,
+                                  state: FSMContext, **data):
     # No changes needed here as PaymentService is not used directly
     sub_type = "Стандарт" if callback_data.sub_type == "standard" else "Pro"
     months = callback_data.months
@@ -93,12 +90,13 @@ async def handle_buy_subscription(query: CallbackQuery, callback_data: Subscript
     )
     await query.answer()
 
+
 @router.message(StateFilter(SupportStates.WAITING))
 async def process_contact(message: Message, state: FSMContext, **data):
     # Manually get the container and the service
     container: AsyncContainer = data["dishka_container"]
     payment_service: PaymentService = await container.get(PaymentService)
-    
+
     state_data = await state.get_data()
     customer_contact = None
 

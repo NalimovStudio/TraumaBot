@@ -37,7 +37,6 @@ dependencies = [
     "typing-inspection (==0.4.1)",
     "typing-extensions (==4.14.1)",
     "asyncpg (>=0.30.0,<0.31.0)",
-    "psycopg2 (>=2.9.10,<3.0.0)",
     "greenlet (>=3.2.4,<4.0.0)",
     "pytest (>=8.4.1,<9.0.0)",
     "pytest-asyncio (>=1.1.0,<2.0.0)",
@@ -47,7 +46,9 @@ dependencies = [
     "twisted (>=25.5.0,<26.0.0)",
     "uvicorn (>=0.35.0,<0.36.0)",
     "fastapi (>=0.116.1,<0.117.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
     "python-dateutil (>=2.9.0.post0,<3.0.0)",
+    "fastapi-security-telegram-webhook (>=0.2.0,<0.3.0)",
 ]
 
 [tool.poetry]

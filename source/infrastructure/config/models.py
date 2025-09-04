@@ -1,11 +1,10 @@
 from pydantic import (
-    BaseModel, 
-    model_validator, 
+    BaseModel,
     SecretStr,
     RedisDsn,
-    PostgresDsn,
-    NatsDsn
+    PostgresDsn
 )
+
 
 class RedisConfig(BaseModel):
     host: str
@@ -25,6 +24,7 @@ class RedisConfig(BaseModel):
         )
         return dsn.unicode_string()
 
+
 class DatabaseConfig(BaseModel):
     user: str
     password: SecretStr
@@ -33,7 +33,6 @@ class DatabaseConfig(BaseModel):
     port: int = 5432
     driver: str = "asyncpg"
     system: str = "postgresql"
-
 
     def build_connection_url(self) -> str:
         dsn: PostgresDsn = PostgresDsn.build(
@@ -45,9 +44,11 @@ class DatabaseConfig(BaseModel):
             path=self.path
         )
         return dsn.unicode_string()
-    
+
+
 class BotConfig(BaseModel):
     token: SecretStr
+
 
 class AssistantConfig(BaseModel):
     api_key: SecretStr

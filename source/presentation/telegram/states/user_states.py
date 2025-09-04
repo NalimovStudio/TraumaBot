@@ -6,6 +6,10 @@ class SupportStates(StatesGroup):
     CHECK_IN = State()          # Ожидание ответа на первый вопрос "Как ты?"
     METHOD_SELECT = State()     # Ожидание выбора метода поддержки
 
+    # ПОТОК БЛЕКПИЛЛ
+    BLACKPILL = State()
+    BLACKPILL_TALK = State()
+
     # Потоки поддержки
     CALMING = State()           # В процессе выполнения техники "Успокоиться"
     CALMING_TALK = State()      # В процессе разговора с ИИ после техники "Успокоиться"
@@ -24,8 +28,7 @@ class SupportStates(StatesGroup):
     PROBLEM_S1_DEFINE = State()         # Шаг 1: Определение проблемы
     PROBLEM_S2_GOAL = State()           # Шаг 2: Определение цели
     PROBLEM_S3_OPTIONS = State()        # Шаг 3: Генерация вариантов
-    PROBLEM_S4_CHOICE = State()         # Шаг 4: Выбор варианта
-    PROBLEM_S5_PACT = State()           # Шаг 5: "Пакт" о выполнении
+    PROBLEM_S4_STEPS_DISPLAYED = State() # Шаг 4: Отображение шагов и ожидание ответа
 
     # Протокол безопасности
     RISK_PROTOCOL = State()             # Состояние при обнаружении риска

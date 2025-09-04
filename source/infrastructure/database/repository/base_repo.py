@@ -81,15 +81,10 @@ class BaseRepository(Generic[M]):
         """Создание модели model: M"""
         try:
             model: M = self.model.from_pydantic(schema=model_schema)
-            
             self.session.add(model)
-            
             await self.session.flush()
-            
             await self.session.refresh(model)
-
             return model.get_schema()
-            
         except IntegrityError:
             await self.session.rollback()
             raise
@@ -98,5 +93,5 @@ class BaseRepository(Generic[M]):
             raise e
 
     async def merge(self, model_schema: S) -> None:
-        model: M = self.model.from_pydantic(schema=model_schema)
+        model: M = self.model.from_pydantic(model_schema)
         await self.session.merge(model)

@@ -12,7 +12,7 @@ async def test_get_by_telegram_id(user_repo, user_schema, mock_user_model):
     user_repo.session.execute.return_value.scalar_one_or_none.return_value = mock_user_model
 
     # Вызываем тестируемый метод
-    result = await user_repo.get_by_telegram_id(user_schema.telegram_id)
+    result = await user_repo.get_schema_by_telegram_id(user_schema.telegram_id)
 
     # Проверяем вызовы
     user_repo.session.execute.assert_called_once()
@@ -30,7 +30,7 @@ async def test_get_by_telegram_id_returns_none(user_repo, user_schema):
     user_repo.session.execute.return_value.scalar_one_or_none.return_value = None
 
     # Вызываем тестируемый метод
-    result = await user_repo.get_by_telegram_id(user_schema.telegram_id)
+    result = await user_repo.get_schema_by_telegram_id(user_schema.telegram_id)
 
     # Проверяем вызовы
     user_repo.session.execute.assert_called_once()
@@ -70,7 +70,7 @@ async def test_create(user_repo, user_schema, mock_user_model):
         user_repo.session.add.assert_called_once_with(mock_user_model)
 
         # Проверяем, что commit был вызван
-        #user_repo.session.commit.assert_called_once()
+        # user_repo.session.commit.assert_called_once()
 
         # Проверяем, что refresh был вызван с нашей моделью
         user_repo.session.refresh.assert_called_once_with(mock_user_model)
@@ -105,7 +105,7 @@ async def test_update(user_repo, user_schema):
     assert str(call_args).count("UPDATE") == 1  # Проверяем что это UPDATE
 
     # Проверяем вызов commit
-    #user_repo.session.commit.assert_called_once()
+    # user_repo.session.commit.assert_called_once()
 
     # Проверяем что scalar_one_or_none был вызван
     mock_execute_result.scalar_one_or_none.assert_called_once()
@@ -129,14 +129,15 @@ async def test_delete(user_repo):
 
     # Проверяем вызовы
     user_repo.session.execute.assert_called_once()
-    #user_repo.session.commit.assert_called_once()
+    # user_repo.session.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_create_unique_violation(user_repo, user_schema):
     # Настраиваем мок для выброса исключения при нарушении уникальности
     from sqlalchemy.exc import IntegrityError
-    user_repo.session.commit.side_effect = IntegrityError("", "", "")
+    # костыль потому что commit в uow
+    user_repo.session.refresh.side_effect = IntegrityError("", "", "")
 
     # Проверяем, что исключение пробрасывается
     with pytest.raises(IntegrityError):

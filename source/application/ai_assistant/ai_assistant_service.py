@@ -1,5 +1,6 @@
 from source.application.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
-from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT
+from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT, \
+    BLACKPILL_EXIT_PROMPT
 from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
 from source.infrastructure.ai_assistant.ai_assistant import AssistantClient
 
@@ -12,12 +13,14 @@ class AssistantService(AssistantServiceInterface):
             self,
             message: str,
             context_messages: list[ContextMessage] = [],
-            prompt: str = GET_CALM_PROMPT
+            prompt: str = GET_CALM_PROMPT,
+            temperature=0.3
     ) -> AssistantResponse:
         return await self.client.get_response(
             system_prompt=prompt,
             message=message,
             context_messages=context_messages,
+            temperature=temperature
         )
 
     async def get_kpt_diary_response(
@@ -36,7 +39,7 @@ class AssistantService(AssistantServiceInterface):
             self,
             message: str,
             context_messages: list[ContextMessage] = [],
-            temperature: float = 0.4,
+            temperature: float = 0.3,
             prompt: str = PROBLEMS_SOLVER_PROMPT
     ) -> AssistantResponse:
         return await self.client.get_response(
@@ -50,10 +53,27 @@ class AssistantService(AssistantServiceInterface):
             self,
             message: str,
             prompt: str = SPEAK_OUT_PROMPT,
-            context_messages: list[ContextMessage] = []
+            context_messages: list[ContextMessage] = [],
+            temperature = 0.3
     ) -> AssistantResponse:
         return await self.client.get_response(
             system_prompt=prompt,
             message=message,
-            context_messages=context_messages
+            context_messages=context_messages,
+            temperature=temperature
+        )
+
+    async def get_blackpill_exit_response(
+            self,
+            message: str,
+            prompt: str = BLACKPILL_EXIT_PROMPT,
+            context_messages: list[ContextMessage] = [],
+            temperature=0.3
+    ) -> AssistantResponse:
+        """Возвращает ответ ассистента в режиме ВЫХОД ИЗ БЛЕКПИЛЛ"""
+        return await self.client.get_response(
+            system_prompt=prompt,
+            message=message,
+            context_messages=context_messages,
+            temperature=temperature
         )
