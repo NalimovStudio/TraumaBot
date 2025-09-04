@@ -54,7 +54,7 @@ class AssistantService(AssistantServiceInterface):
             message: str,
             prompt: str = SPEAK_OUT_PROMPT,
             context_messages: list[ContextMessage] = [],
-            temperature = 0.3
+            temperature=0.3
     ) -> AssistantResponse:
         return await self.client.get_response(
             system_prompt=prompt,
