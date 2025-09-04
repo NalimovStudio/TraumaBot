@@ -10,11 +10,16 @@ from source.core.enum import UserType, SubscriptionType
 class UserDialogsLoggingSchema(BaseModel):
     id: UUID = Field(..., description="ID диалога в формате UUID")
     user_id: UUID = Field(..., description="ID юзера в формате UUID")
-    messages: list[str] = Field(..., description="Массив сообщений в диалоге")
+    message: str = Field(..., description="Массив сообщений в диалоге в формате JSON-строки")
     created_at: datetime = Field(..., description="когда сообщение отправлено")
 
     class Config:
         from_attributes = True
+
+
+class UserDialogsLoggingCreateSchema(BaseModel):
+    user_id: UUID
+    message: str
 
 
 class UserSchema(BaseModel):
