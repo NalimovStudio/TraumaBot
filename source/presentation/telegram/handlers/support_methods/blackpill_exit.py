@@ -39,6 +39,7 @@ async def handle_ready_callback(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(random.choice(BLACKPILL_AFTER_READY_TEXT_ARRAY))
     await callback.answer()
 
+
 @router.message(SupportStates.BLACKPILL)
 async def handle_blackpill_talking(
     message: Message,
@@ -82,10 +83,14 @@ async def handle_blackpill_talking(
         ai_message_context = ContextMessage(role="assistant", message=ai_response_text)
         await history.add_message_to_history(user_id, context_scope, ai_message_context)
 
-        await send_long_message(message, convert_markdown_to_html(ai_response_text), bot, keyboard=get_back_to_menu_keyboard())
+        await send_long_message(message, convert_markdown_to_html(ai_response_text), bot,
+                                keyboard=get_back_to_menu_keyboard())
         telegram_id = str(user_id)
         await subscription_service.increment_message_count(telegram_id)
 
     except Exception as e:
-        logger.error(f"Ошибка для получении ии юзера {user_id} в скопе {context_scope}: {e}")
-        await message.answer("Произошла ошибка. Пожалуйста, попробуй еще раз. Если проблема повторится, ты можешь вернуться в меню.", reply_markup=get_back_to_menu_keyboard())
+        logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")
+        await message.answer(
+            "Произошла ошибка. Пожалуйста, попробуй еще раз. Если проблема повторится, ты можешь вернуться в меню.",
+            reply_markup=get_back_to_menu_keyboard()
+        )
