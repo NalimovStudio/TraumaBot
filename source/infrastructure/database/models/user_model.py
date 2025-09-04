@@ -71,8 +71,8 @@ class UserDialogsLogging(BaseModel, TimestampCreatedAtMixin):
         lazy="selectin"
     )
 
-    messages: Mapped[list[str]] = mapped_column(
-        ARRAY(VARCHAR),  # Указываем, что массив состоит из строк VARCHAR
+    message: Mapped[str] = mapped_column(
+        String,
         comment="Массив сообщений пользователя"
     )
 

@@ -66,7 +66,7 @@ async def handle_calming_talk(message: Message, state: FSMContext, bot: Bot, **d
     message_history = await history.get_history(user_id, context_scope)
 
     try:
-        response = await assistant.get_speak_out_response(message=message.text, context_messages=message_history)
+        response = await assistant.get_calm_response(message=message.text, context_messages=message_history)
         ai_response_text = response.message
 
         ai_message_context = ContextMessage(role="assistant", message=ai_response_text)

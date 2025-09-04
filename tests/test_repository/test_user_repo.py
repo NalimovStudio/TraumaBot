@@ -12,7 +12,7 @@ async def test_get_by_telegram_id(user_repo, user_schema, mock_user_model):
     user_repo.session.execute.return_value.scalar_one_or_none.return_value = mock_user_model
 
     # Вызываем тестируемый метод
-    result = await user_repo.get_by_telegram_id(user_schema.telegram_id)
+    result = await user_repo.get_schema_by_telegram_id(user_schema.telegram_id)
 
     # Проверяем вызовы
     user_repo.session.execute.assert_called_once()
@@ -30,7 +30,7 @@ async def test_get_by_telegram_id_returns_none(user_repo, user_schema):
     user_repo.session.execute.return_value.scalar_one_or_none.return_value = None
 
     # Вызываем тестируемый метод
-    result = await user_repo.get_by_telegram_id(user_schema.telegram_id)
+    result = await user_repo.get_schema_by_telegram_id(user_schema.telegram_id)
 
     # Проверяем вызовы
     user_repo.session.execute.assert_called_once()

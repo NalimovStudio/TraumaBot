@@ -22,7 +22,7 @@ async def handle_risk_protocol(message: Message, state: FSMContext):
     if step == 1:
         await state.update_data(risk_step=2)
         text = (
-            "Спасибо, что сказал мне это. Это очень серьезно, и я здесь, чтобы помочь.\n\n"
+            "Ценю твоё доверие. Это очень серьезно, и я здесь, чтобы помочь.\n\n"
             "<b>Есть ли у тебя конкретный план или средства? Находится ли сейчас рядом кто-то, кто может тебя поддержать?</b>"
         )
         await message.answer(text)

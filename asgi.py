@@ -8,6 +8,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramRetryAfter
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
+from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
 
 from source.core.logging.logging_config import configure_logging
 from source.infrastructure.dishka import make_dishka_container
@@ -47,7 +48,15 @@ async def lifespan(app: FastAPI):
         bot: Bot = await dishka_container.get(Bot)
         dp: Dispatcher = await dishka_container.get(Dispatcher)
 
-        webhook_url = "https://траума.рф/v1/webhooks/telegram"
+        # install webhook secret
+        secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
+        if not secret:
+            raise ValueError("TELEGRAM_WEBHOOK_SECRET is not set in environment variables")
+
+        # TODO
+        # webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
+        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL")
+
         success = await set_webhook_with_retry(bot, webhook_url)
         if not success:
             raise RuntimeError("Failed to set Telegram webhook")

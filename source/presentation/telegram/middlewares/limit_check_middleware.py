@@ -56,7 +56,7 @@ class LimitCheckMiddleware(BaseMiddleware):
 
         if limit_reached:
             await event.answer(
-                "Вы достигли лимита сообщений за день. Подпишитесь для продолжения или выберите тариф в меню.",
+                "<b>Вы достигли лимита сообщений за сутки. Дождитесь завтра или приобретите подписку:</b>",
                 reply_markup=get_subscriptions_menu_keyboard()
             )
             return

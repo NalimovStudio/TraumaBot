@@ -1,13 +1,14 @@
 import logging
+import os
 from datetime import datetime
 from typing import Dict, Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from dateutil.relativedelta import relativedelta
-from dishka.integrations.fastapi import DishkaRoute, inject
+from dishka.integrations.fastapi import DishkaRoute
 from dishka.integrations.fastapi import FromDishka
-from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks
+from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends
 
 from source.application.user import GetUserById, MergeUser
 from source.infrastructure.database.models.payment_model import PaymentLogs
@@ -99,6 +100,14 @@ async def handle_yookassa_webhook(
     return {"status": "ok"}
 
 
+from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
+
+webhook_security = OnlyTelegramNetworkWithSecret(
+    real_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET")
+)
+
+
+# @webhooks_router.post("/telegram/{secret}", dependencies=[Depends(webhook_security)])
 @webhooks_router.post("/telegram")
 async def telegram_webhook(request: Request):
     try:

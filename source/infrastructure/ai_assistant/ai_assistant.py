@@ -1,10 +1,11 @@
 import logging
-from os import environ
 
 from openai import OpenAI
 
 from source.core.exceptions import AssistantResponseException, AssistantException
 from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
+
+logger = logging.getLogger(__name__)
 
 
 class AssistantClient:
@@ -24,7 +25,7 @@ class AssistantClient:
 
         # Добавление контекста
         for context_message in context_messages:
-            print(context_message.get_message_to_deepseek(), sep='\n')
+            logger.info(context_message.get_message_to_deepseek())
             messages.append(context_message.get_message_to_deepseek())
 
         # Добавление последнего сообщения 

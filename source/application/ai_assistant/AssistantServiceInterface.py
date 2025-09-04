@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 from source.core.schemas.assistant_schemas import AssistantResponse, ContextMessage
 
-#TODO Пересмотреть структуру интерфейсов
 
 class AssistantServiceInterface(ABC):
     @abstractmethod
@@ -22,7 +21,7 @@ class AssistantServiceInterface(ABC):
             prompt: str,
             context_messages: list[ContextMessage]
     ) -> AssistantResponse:
-        """Дневник эмоций КПТ."""  # TODO обсудить че это такое вообще
+        """Дневник эмоций КПТ."""  # TODO
         pass
 
     @abstractmethod
@@ -31,7 +30,7 @@ class AssistantServiceInterface(ABC):
             message: str,
             prompt: str,
             context_messages: list[ContextMessage],
-            temperature: float = 0.4
+            temperature: float = 0.65
     ) -> AssistantResponse:
         """Решение проблем. Строгий промпт, ниже температура."""
         pass
