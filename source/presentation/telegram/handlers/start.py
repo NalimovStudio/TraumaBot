@@ -8,7 +8,6 @@ from aiogram.types import Message
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 
 logger = logging.getLogger(__name__)
-
 router = Router(name=__name__)
 
 
