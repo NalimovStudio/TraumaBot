@@ -3,6 +3,7 @@ from dishka import Provider, provide, Scope
 from typing import AsyncIterable
 
 from source.infrastructure.database.repository import UserRepository, PaymentRepository
+from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
 
 
 class RepositoryProvider(Provider):
@@ -10,3 +11,4 @@ class RepositoryProvider(Provider):
 
     user_repository = provide(UserRepository)
     payment_repository = provide(PaymentRepository)
+    dialogs_logging_repository = provide(UserDialogsLoggingRepository)

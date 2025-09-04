@@ -1,3 +1,10 @@
+<<<<<<<< HEAD:source/presentation/fastapi/webhooks_router.py
+========
+import uvicorn
+from fastapi import APIRouter, status, Request, BackgroundTasks
+from dishka.integrations.fastapi import DishkaRoute, FromDishka
+from typing import Dict, Any
+>>>>>>>> dev_red:source/presentation/webhooks/router.py
 import logging
 import os
 from datetime import datetime
@@ -13,7 +20,15 @@ from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, 
 from source.application.user import GetUserById, MergeUser
 from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.models.user_model import User
+<<<<<<<< HEAD:source/presentation/fastapi/webhooks_router.py
 from source.infrastructure.database.repository import PaymentRepository
+========
+from source.application.user import GetUserSchemaById, MergeUser
+from source.application.payment.merge import MergePayment
+from source.core.schemas.user_schema import UserSchema
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+>>>>>>>> dev_red:source/presentation/webhooks/router.py
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +36,20 @@ webhooks_router = APIRouter(prefix="/v1/webhooks", route_class=DishkaRoute)
 
 
 async def process_successful_payment(
+<<<<<<<< HEAD:source/presentation/fastapi/webhooks_router.py
         event_json: Dict[str, Any],
         payment_repo: PaymentRepository,
         get_user_id: GetUserById,
         merge: MergeUser,
         bot: Bot
+========
+    event_json: Dict[str, Any],
+    payment_repo: PaymentRepository, 
+    get_user_id: GetUserSchemaById,
+    merge_user: MergeUser,
+    merge_payment: MergePayment,
+    bot: Bot
+>>>>>>>> dev_red:source/presentation/webhooks/router.py
 ):
     """Асинхронная обработка успешной оплаты (в background)."""
     try:
@@ -52,17 +76,26 @@ async def process_successful_payment(
         now = datetime.utcnow()
         date_end = now + relativedelta(months=payment_log.month_sub)
 
-        user: User = await get_user_id(telegram_id)  # Получить User
+        user: UserSchema = await get_user_id(telegram_id)  # Получить User
         if user:
             user.subscription = payment_log.subscription
             user.subscription_start = now
             user.subscription_date_end = date_end
             user.messages_used = 0
+<<<<<<<< HEAD:source/presentation/fastapi/webhooks_router.py
             user.daily_messages_used = 0
             await merge(user)  # Merge для сохранения
 
         payment_log.status = 'succeeded'
         await payment_repo.merge(payment_log)
+========
+            user.daily_messages_used = 0 
+            await merge_user(user)  # Merge для сохранения
+
+        payment_log.status = 'succeeded'
+        await merge_payment(payment_log) 
+
+>>>>>>>> dev_red:source/presentation/webhooks/router.py
 
         await bot.send_message(
             chat_id=int(telegram_id),
@@ -72,17 +105,26 @@ async def process_successful_payment(
 
     except Exception as e:
         logger.error(f"Error processing payment {purchase_id}: {e}")
-        # Здесь можно добавить retry или лог в DLQ, но для простоты - log
 
 
 @webhooks_router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
 async def handle_yookassa_webhook(
+<<<<<<<< HEAD:source/presentation/fastapi/webhooks_router.py
         request: Request,
         background_tasks: BackgroundTasks,
         payment_repo: FromDishka[PaymentRepository],
         get_by_id: FromDishka[GetUserById],
         merge: FromDishka[MergeUser],
         bot: FromDishka[Bot]
+========
+    request: Request,
+    background_tasks: BackgroundTasks,
+    payment_repo: FromDishka[PaymentRepository],
+    get_by_id: FromDishka[GetUserSchemaById],
+    merge_payment: FromDishka[MergePayment],
+    merge_user: FromDishka[MergeUser],
+    bot: FromDishka[Bot]
+>>>>>>>> dev_red:source/presentation/webhooks/router.py
 ):
     event_json = await request.json()
     logger.info("Webhook received!")
@@ -93,7 +135,8 @@ async def handle_yookassa_webhook(
         event_json,
         payment_repo,
         get_by_id,
-        merge,
+        merge_payment,
+        merge_user,
         bot
     )
 
