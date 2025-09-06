@@ -4,6 +4,7 @@ import random
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from aiogram.filters import Command
 from dishka import AsyncContainer
 
 from source.application.ai_assistant.ai_assistant_service import AssistantService
@@ -40,28 +41,23 @@ async def handle_ready_callback(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(random.choice(BLACKPILL_AFTER_READY_TEXT_ARRAY))
     await callback.answer()
 
-
-
-@router.message(SupportStates.BLACKPILL)
-async def handle_blackpill_talking(
+@router.message(Command("stop"), SupportStates.BLACKPILL)
+async def handle_stop_blackpill(
     message: Message,
     state: FSMContext,
-    bot: Bot,
-    user_repo: UserRepository,
-    dialogs_repo: UserDialogsLoggingRepository,
-    uow: UnitOfWork,
     **data,
 ):
     container: AsyncContainer = data["dishka_container"]
-    assistant: AssistantService = await container.get(AssistantService)
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
     history: MessageHistoryService = await container.get(MessageHistoryService)
-    subscription_service: SubscriptionService = await container.get(SubscriptionService)
 
     user_id = message.from_user.id
-    context_scope = "blackpill_exit" 
+    context_scope = "blackpill_exit"
+    logger.info(f"Пользователь {user_id} Остановил сессию blackpill.")
 
-    if message.text == "Вернуться в меню":
-        await log_support_dialog(
+    await log_support_dialog(
             user_id=user_id,
             context_scope=context_scope,
             history_service=history,
@@ -69,16 +65,38 @@ async def handle_blackpill_talking(
             dialogs_repo=dialogs_repo,
             uow=uow,
         )
-        await state.clear()
-        await history.clear_history(user_id, context_scope)
-        await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())
-        return
+    
+    await state.clear()
+    await history.clear_history(user_id, context_scope)
+    await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())
+    return
+
+@router.message(SupportStates.BLACKPILL)
+async def handle_blackpill_talking(
+    message: Message,
+    state: FSMContext,
+    bot: Bot,
+    **data,
+):
+    container: AsyncContainer = data["dishka_container"]
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
+    assistant: AssistantService = await container.get(AssistantService)
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    subscription_service: SubscriptionService = await container.get(SubscriptionService)
+
+    user_id = message.from_user.id
+    context_scope = "blackpill_exit" 
 
     user_message_context = ContextMessage(role="user", message=message.text)
     await history.add_message_to_history(user_id, context_scope, user_message_context)
     message_history = await history.get_history(user_id, context_scope)
 
     try:
+        await message.answer(
+        "Хорошо, думаю над ответом...\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
+        )
         response = await assistant.get_blackpill_exit_response(message=message.text, context_messages=message_history)
         ai_response_text = response.message
 

@@ -4,6 +4,7 @@ import logging
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from aiogram.filters import Command
 from dishka import AsyncContainer
 
 from source.application.ai_assistant.ai_assistant_service import AssistantService
@@ -172,23 +173,20 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
         await state.set_state(SupportStates.METHOD_SELECT)
 
 
-@router.message(SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
-async def handle_ps_s4_discussion_and_log(
+@router.message(Command("stop"), SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
+async def handle_stop_problem_solving(
     message: Message,
     state: FSMContext,
     user_repo: UserRepository,
     dialogs_repo: UserDialogsLoggingRepository,
     uow: UnitOfWork,
-    **data
+    **data,
 ):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     user_id = message.from_user.id
     context_scope = "problem_solving"
-
-    await history.add_message_to_history(
-        user_id, context_scope, ContextMessage(role="user", message=message.text)
-    )
+    logger.info(f"User {user_id} stopped problem solving session.")
 
     await log_support_dialog(
         user_id=user_id,
@@ -196,11 +194,50 @@ async def handle_ps_s4_discussion_and_log(
         history_service=history,
         user_repo=user_repo,
         dialogs_repo=dialogs_repo,
-        uow=uow
+        uow=uow,
     )
-
-    text = "Договорились! Я верю, у тебя получится. Если хочешь, я могу напомнить тебе об этом. (Функция напоминаний в разработке).\n\nВозвращаю в главное меню."
-    await message.answer(text, reply_markup=get_main_keyboard())
 
     await state.clear()
     await history.clear_history(user_id, context_scope)
+
+    await message.answer(
+        "Хорошо, мы закончили. Возвращаю в главное меню.",
+        reply_markup=get_main_keyboard()
+    )
+
+
+@router.message(SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
+async def handle_ps_s4_discussion(message: Message, bot: Bot, **data):
+    container: AsyncContainer = data["dishka_container"]
+    assistant: AssistantService = await container.get(AssistantService)
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    subscription_service: SubscriptionService = await container.get(SubscriptionService)
+
+    user_id = message.from_user.id
+    context_scope = "problem_solving"
+
+    user_message = ContextMessage(role="user", message=message.text)
+    await history.add_message_to_history(user_id, context_scope, user_message)
+    message_history = await history.get_history(user_id, context_scope)
+
+    try:
+        await message.answer(
+        "Хорошо, думаю над ответом...\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
+        )
+        response = await assistant.get_speak_out_response(
+            message=message.text,
+            context_messages=message_history
+        )
+        response_text = response.message
+        response_text_html = convert_markdown_to_html(response_text)
+
+        ai_message = ContextMessage(role="assistant", message=response_text)
+        await history.add_message_to_history(user_id, context_scope, ai_message)
+
+        await send_long_message(message, response_text_html, bot)
+        telegram_id = str(user_id)
+        await subscription_service.increment_message_count(telegram_id)
+
+    except Exception as e:
+        logger.error(f"Ошибка во время дискуссии с пользователем в решении проблемы {user_id}: {e}")
+        await message.answer("Произошла ошибка. Пожалуйста, попробуйте еще раз или завершите сессию командой /stop.")

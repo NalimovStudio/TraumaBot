@@ -23,7 +23,6 @@ async def log_support_dialog(
     dialogs_repo: UserDialogsLoggingRepository,
     uow: UnitOfWork,
 ):
-    """Fetches dialog history and saves it to the database using the repository pattern."""
     logger = logging.getLogger(__name__)
     try:
         full_history = await history_service.get_history(user_id, context_scope)

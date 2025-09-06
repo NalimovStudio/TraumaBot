@@ -37,17 +37,17 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
 async def handle_stop_venting(
     message: Message,
     state: FSMContext,
-    user_repo: UserRepository,
-    dialogs_repo: UserDialogsLoggingRepository,
-    uow: UnitOfWork,
     **data,
 ):
     container: AsyncContainer = data["dishka_container"]
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
     history: MessageHistoryService = await container.get(MessageHistoryService)
 
     user_id = message.from_user.id
     context_scope = "venting"
-    logger.info(f"User {user_id} stopped venting session.")
+    logger.info(f"Пользователь {user_id} Остановил сессию высказаться.")
 
     await log_support_dialog(
         user_id=user_id,
@@ -78,11 +78,15 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
     context_scope = "venting"
     logger.info(f"User {user_id} is venting. Msg: '{message.text[:30]}...'")
 
+
     user_message = ContextMessage(role="user", message=message.text)
     await history.add_message_to_history(user_id, context_scope, user_message)
     message_history = await history.get_history(user_id, context_scope)
 
     try:
+        await message.answer(
+        "Хорошо, думаю над ответом...\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
+        )
         response = await assistant.get_speak_out_response(
             message=message.text,
             context_messages=message_history
