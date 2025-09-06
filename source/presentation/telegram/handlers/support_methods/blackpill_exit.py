@@ -36,8 +36,10 @@ async def handle_blackpill_method(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(BlackpillCallback.filter(), SupportStates.BLACKPILL)
 async def handle_ready_callback(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(SupportStates.BLACKPILL_TALK)
     await callback.message.edit_text(random.choice(BLACKPILL_AFTER_READY_TEXT_ARRAY))
     await callback.answer()
+
 
 
 @router.message(SupportStates.BLACKPILL)

@@ -33,7 +33,7 @@ class LimitCheckMiddleware(BaseMiddleware):
             SupportStates.VENTING.state,
             SupportStates.PROBLEM_S2_GOAL.state,
             SupportStates.CALMING_TALK.state,
-            SupportStates.BLACKPILL_TALK
+            SupportStates.BLACKPILL_TALK.state
         ]
 
         if current_state not in limitable_states:
