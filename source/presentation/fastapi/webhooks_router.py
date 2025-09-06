@@ -1,10 +1,10 @@
-import uvicorn
 from fastapi import APIRouter, status, Request, BackgroundTasks
-from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from typing import Dict, Any
 import logging
+import os
+from datetime import datetime
 
-from aiogram import Bot
+from aiogram import Bot, Dispatcher
 from source.application.subscription.subscription_service import SubscriptionService 
 from source.infrastructure.database.repository import PaymentRepository
 from source.infrastructure.database.models.payment_model import PaymentLogs
@@ -15,9 +15,23 @@ from source.core.schemas.user_schema import UserSchema
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
+
+
+from aiogram.types import Update
+from dateutil.relativedelta import relativedelta
+from dishka.integrations.fastapi import DishkaRoute, FromDishka
+from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends
+from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
+
+
+from source.infrastructure.database.models.payment_model import PaymentLogs
+from source.infrastructure.database.models.user_model import User
+from source.infrastructure.database.repository import PaymentRepository
+
+
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/parser", route_class=DishkaRoute)
+webhooks_router = APIRouter(prefix="/v1/webhooks", route_class=DishkaRoute)
 
 async def process_successful_payment(
     event_json: Dict[str, Any],
@@ -99,3 +113,29 @@ async def handle_yookassa_webhook(
     )
 
     return {"status": "ok"}
+
+webhook_security = OnlyTelegramNetworkWithSecret(
+    real_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET")
+)
+
+
+# @webhooks_router.post("/telegram/{secret}", dependencies=[Depends(webhook_security)])
+@webhooks_router.post("/telegram")
+async def telegram_webhook(request: Request):
+    try:
+        # Get container from app state
+        container = request.app.state.dishka_container
+
+        # Get dependencies manually
+        bot: Bot = await container.get(Bot)
+        dp: Dispatcher = await container.get(Dispatcher)
+
+        update_data = await request.json()
+        update = Update(**update_data)
+
+        await dp.feed_update(bot=bot, update=update, dishka_container=container)
+
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Telegram webhook error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
