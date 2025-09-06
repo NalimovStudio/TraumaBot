@@ -9,8 +9,10 @@ from source.core.enum import UserType, SubscriptionType
 
 class UserDialogsLoggingSchema(BaseModel):
     id: UUID = Field(..., description="ID диалога в формате UUID")
-    user_id: UUID = Field(..., description="ID юзера в формате UUID")
-    message: str = Field(..., description="Массив сообщений в диалоге в формате JSON-строки")
+    user_id: int = Field(..., description="Телеграм айди")
+    dialogue_id: UUID = Field(..., description="ID сессии диалога")
+    role: str = Field(..., description="Роль отправителя (user или assistant)")
+    message_text: str = Field(..., description="Текст сообщения")
     created_at: datetime = Field(..., description="когда сообщение отправлено")
 
     class Config:
@@ -19,7 +21,9 @@ class UserDialogsLoggingSchema(BaseModel):
 
 class UserDialogsLoggingCreateSchema(BaseModel):
     user_id: UUID
-    message: str
+    dialogue_id: UUID
+    role: str
+    message_text: str
 
 
 class UserSchema(BaseModel):

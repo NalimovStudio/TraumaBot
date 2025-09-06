@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
@@ -20,7 +21,7 @@ from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, get_problem_solutions_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
 from source.presentation.telegram.utils import send_long_message, extract_json_from_markdown, convert_markdown_to_html, \
-    log_support_dialog
+    log_message
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -29,6 +30,8 @@ router = Router(name=__name__)
 @router.callback_query(MethodCallback.filter(F.name == "problem"), SupportStates.METHOD_SELECT)
 async def handle_problem_solving_method(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} chose 'problem' method.")
+    dialogue_id = uuid.uuid4()
+    await state.update_data(dialogue_id=dialogue_id)
     await state.set_state(SupportStates.PROBLEM_S1_DEFINE)
     text = "Давай разберем это по шагам. Сформулируй проблему в одном предложении."
     await query.message.edit_text(text)
@@ -39,10 +42,17 @@ async def handle_problem_solving_method(query: CallbackQuery, state: FSMContext)
 async def handle_ps_s1_define(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
 
+    state_data = await state.get_data()
+    dialogue_id = state_data["dialogue_id"]
+    await log_message(dialogue_id, message.from_user.id, user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(
         message.from_user.id, "problem_solving", ContextMessage(role="user", message=message.text)
     )
+
     await state.update_data(problem_definition=message.text)
     await state.set_state(SupportStates.PROBLEM_S2_GOAL)
     text = "Хорошо. А как ты поймешь, что проблема решена? Что будет твоим критерием успеха?"
@@ -55,14 +65,19 @@ async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **dat
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
 
     user_id = message.from_user.id
     context_scope = "problem_solving"
+    state_data = await state.get_data()
+    dialogue_id = state_data["dialogue_id"]
 
     await message.answer("Спасибо. Я подумаю и предложу варианты действий. Минутку...")
 
-    user_message = ContextMessage(role="user", message=message.text)
-    await history.add_message_to_history(user_id, context_scope, user_message)
+    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     message_history = await history.get_history(user_id, context_scope)
 
     await state.update_data(problem_goal=message.text)
@@ -79,8 +94,8 @@ async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **dat
         json_string = extract_json_from_markdown(raw_response.message)
         solutions = json.loads(json_string)
 
-        ai_message = ContextMessage(role="assistant", message=raw_response.message)
-        await history.add_message_to_history(user_id, context_scope, ai_message)
+        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, raw_response.message, "assistant")
+        await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=raw_response.message))
 
         await state.update_data(solutions=solutions)
 
@@ -97,8 +112,7 @@ async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **dat
             bot=bot,
             keyboard=get_problem_solutions_keyboard()
         )
-        telegram_id = str(user_id)
-        await subscription_service.increment_message_count(telegram_id)
+        await subscription_service.increment_message_count(str(user_id))
 
     except (json.JSONDecodeError, TypeError, KeyError) as e:
         logger.error(f"Ошибка когда парсит {user_id} в скопе {context_scope}: {e}")
@@ -121,56 +135,45 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
                               **data):
     await query.message.edit_text("Отличный выбор. Генерирую первые шаги, минутку...")
     await query.answer()
-
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
 
     user_id = query.from_user.id
     context_scope = "problem_solving"
 
     state_data = await state.get_data()
+    dialogue_id = state_data["dialogue_id"]
+
     chosen_option_data = state_data["solutions"][callback_data.option_id]
     chosen_option_text = chosen_option_data.get('option', 'N/A')
     await state.update_data(chosen_option=chosen_option_data)
-
+    
     choice_message = f"Выбран вариант: {chosen_option_text}"
-    await history.add_message_to_history(
-        user_id, context_scope, ContextMessage(role="user", message=choice_message)
-    )
-
-    prompt = PATHWAYS_TO_SOLVE_PROBLEM_PROMPT.format(
-        problem_definition=state_data.get("problem_definition", "не определена"),
-        problem_goal=state_data.get("problem_goal", "не определена"),
-        chosen_option=chosen_option_text
-    )
+    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, choice_message, "user")
+    await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=choice_message))
+    
+    prompt = PATHWAYS_TO_SOLVE_PROBLEM_PROMPT.format(problem_definition=state_data.get("problem_definition"), problem_goal=state_data.get("problem_goal"), chosen_option=chosen_option_text)
 
     try:
-        response = await assistant.get_pathways_to_solve_problem_response(
-            prompt=prompt,
-            context_messages=await history.get_history(user_id, context_scope)
-        )
-        logger.info(f"Сгенерировало шаги для юзера {user_id}: {response.message}")
+        response = await assistant.get_pathways_to_solve_problem_response(prompt=prompt, context_messages=await history.get_history(user_id, context_scope))
+        logger.info(f"Generated steps for user {user_id}: {response.message}")
+        
+        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, response.message, "assistant")
+        await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response.message))
 
-
-        await history.add_message_to_history(
-            user_id, context_scope, ContextMessage(role="assistant", message=response.message)
-        )
-
- 
-        response_text = f"{response.message}\n\nЧто думаешь об этих шагах? Какой из них кажется наиболее реальным для начала?"
-        await send_long_message(
-            message=query.message,
-            text=convert_markdown_to_html(response_text),
-            bot=bot,
-            keyboard=None
-        )
+        response_text = f"{response.message}\n\nЧто думаешь об этих шагах? Какой из них кажется наиболее реальным для начала? (Чтобы закончить, отправь /stop)"
+        await send_long_message(query.message, convert_markdown_to_html(response_text), bot)
         await state.set_state(SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
-
     except Exception as e:
-        logger.error(f"Ошибка при генерации для юзера {user_id}: {e}")
+        logger.error(f"Error generating steps for user {user_id}: {e}")
         await query.message.answer("Произошла ошибка при генерации шагов. Попробуйте выбрать другой вариант или начать заново.")
         await state.set_state(SupportStates.METHOD_SELECT)
+    finally:
+        await query.answer()
 
 
 @router.message(Command("stop"), SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
@@ -181,21 +184,9 @@ async def handle_stop_problem_solving(
 ):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
-    user_repo: UserRepository = await container.get(UserRepository)
-    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
-    uow: UnitOfWork = await container.get(UnitOfWork)
     user_id = message.from_user.id
     context_scope = "problem_solving"
     logger.info(f"User {user_id} stopped problem solving session.")
-
-    await log_support_dialog(
-        user_id=user_id,
-        context_scope=context_scope,
-        history_service=history,
-        user_repo=user_repo,
-        dialogs_repo=dialogs_repo,
-        uow=uow,
-    )
 
     await state.clear()
     await history.clear_history(user_id, context_scope)
@@ -207,16 +198,22 @@ async def handle_stop_problem_solving(
 
 
 @router.message(SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
-async def handle_ps_s4_discussion(message: Message, bot: Bot, **data):
+async def handle_ps_s4_discussion(message: Message, state: FSMContext, bot: Bot, **data):
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
+    state_data = await state.get_data()
+    dialogue_id = state_data["dialogue_id"]
 
     user_id = message.from_user.id
     context_scope = "problem_solving"
 
     user_message = ContextMessage(role="user", message=message.text)
+    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, user_message)
     message_history = await history.get_history(user_id, context_scope)
 
@@ -231,12 +228,11 @@ async def handle_ps_s4_discussion(message: Message, bot: Bot, **data):
         response_text = response.message
         response_text_html = convert_markdown_to_html(response_text)
 
-        ai_message = ContextMessage(role="assistant", message=response_text)
-        await history.add_message_to_history(user_id, context_scope, ai_message)
+        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, response_text, "assistant")
+        await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response_text))
 
         await send_long_message(message, response_text_html, bot)
-        telegram_id = str(user_id)
-        await subscription_service.increment_message_count(telegram_id)
+        await subscription_service.increment_message_count(str(user_id))
 
     except Exception as e:
         logger.error(f"Ошибка во время дискуссии с пользователем в решении проблемы {user_id}: {e}")

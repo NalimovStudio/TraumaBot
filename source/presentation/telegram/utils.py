@@ -1,50 +1,47 @@
 import json
 import logging
 import re
+from uuid import UUID
+
 from aiogram import Bot
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
 
-from source.application.message_history.message_history_service import MessageHistoryService
-from source.core.schemas.user_schema import UserDialogsLoggingCreateSchema
-from source.core.schemas.user_schema import UserSchema
+from source.core.schemas import UserDialogsLoggingCreateSchema
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
 from source.infrastructure.database.repository.user_repo import UserRepository
 from source.infrastructure.database.uow import UnitOfWork
 
-
 TELEGRAM_MAX_MESSAGE_LENGTH = 4096
 
 
-async def log_support_dialog(
+async def log_message(
+    dialogue_id: UUID,
     user_id: int,
-    context_scope: str,
-    history_service: MessageHistoryService,
     user_repo: UserRepository,
     dialogs_repo: UserDialogsLoggingRepository,
     uow: UnitOfWork,
+    text: str,
+    role: str,
 ):
+    """Saves a single message to the database."""
     logger = logging.getLogger(__name__)
     try:
-        full_history = await history_service.get_history(user_id, context_scope)
-        if not full_history:
-            logger.info(f"No history to log for user {user_id} in scope {context_scope}.")
-            return
-
-        history_json = json.dumps([msg.model_dump() for msg in full_history], ensure_ascii=False, indent=2)
-
-        user_in_db: UserSchema = await user_repo.get_schema_by_telegram_id(str(user_id))
+        user_in_db = await user_repo.get_by_telegram_id(str(user_id))
         if user_in_db:
-            log_schema = UserDialogsLoggingCreateSchema(user_id=user_in_db.id, message=history_json)
+            log_schema = UserDialogsLoggingCreateSchema(
+                user_id=user_in_db.id,
+                dialogue_id=dialogue_id,
+                role=role,
+                message_text=text
+            )
             await dialogs_repo.create(log_schema)
             await uow.commit()
-            logger.info(f"Dialog for user {user_id} in scope {context_scope} saved successfully.")
         else:
-            logger.warning(f"User with telegram_id {user_id} not found in DB. Cannot save dialog.")
+            logger.warning(f"User with telegram_id {user_id} not found in DB. Cannot save message.")
 
     except Exception as e:
-        logger.error(f"Failed to save dialog for user {user_id} in scope {context_scope}: {e}")
+        logger.error(f"Failed to save message for user {user_id}: {e}")
         await uow.rollback()
 
 

@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Optional, Type
+from uuid import UUID
 
 from sqlalchemy import String, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.dialects.postgresql import ARRAY, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from source.core.enum import SubscriptionType, UserType
@@ -56,7 +56,7 @@ class User(BaseModel):
 
 
 class UserDialogsLogging(BaseModel, TimestampCreatedAtMixin):
-    """Таблица с прошлыми диалогами"""
+    """Таблица для логирования сообщений в диалогах"""
     __tablename__ = "users_dialogs_logging"
 
     user_id: Mapped[int] = mapped_column(
@@ -64,16 +64,17 @@ class UserDialogsLogging(BaseModel, TimestampCreatedAtMixin):
         nullable=False,
         comment="ID пользователя, совершившего запрос"
     )
-
     user: Mapped["User"] = relationship(
         "User",
         back_populates="logging_requests",
         lazy="selectin"
     )
 
-    message: Mapped[str] = mapped_column(
+    dialogue_id: Mapped[UUID] = mapped_column(postgresql.UUID(as_uuid=True), nullable=False, comment="ID сессии диалога")
+    role: Mapped[str] = mapped_column(String, nullable=False, comment="Роль отправителя (user или assistant)")
+    message_text: Mapped[str] = mapped_column(
         String,
-        comment="Массив сообщений пользователя"
+        comment="Текст сообщения"
     )
 
     @property

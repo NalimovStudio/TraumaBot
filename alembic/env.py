@@ -31,7 +31,7 @@ def get_url_from_env() -> str:
 
     # Get environment variables
     db_user = get_env_var('DB_USER', 'admin')
-    db_password = get_env_var('DB_PASSWORD', 'admin')
+    db_password = get_env_var('DB_PASSWORD', '')
     db_host = get_env_var('DB_HOST', 'db')
     db_port = get_env_var('DB_PORT', '5432')
     db_name = get_env_var('DB_NAME', 'psychoAI_db')
