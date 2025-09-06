@@ -177,13 +177,13 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
 async def handle_stop_problem_solving(
     message: Message,
     state: FSMContext,
-    user_repo: UserRepository,
-    dialogs_repo: UserDialogsLoggingRepository,
-    uow: UnitOfWork,
     **data,
 ):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
+    user_repo: UserRepository = await container.get(UserRepository)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
     user_id = message.from_user.id
     context_scope = "problem_solving"
     logger.info(f"User {user_id} stopped problem solving session.")
