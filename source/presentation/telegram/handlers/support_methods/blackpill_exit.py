@@ -12,11 +12,15 @@ from source.application.subscription.subscription_service import SubscriptionSer
 from source.core.lexicon.bot import BLACKPILL_EXIT_TEXT, BLACKPILL_AFTER_READY_TEXT_ARRAY
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, BlackpillCallback
+from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
+from source.infrastructure.database.repository.user_repo import UserRepository
+from source.infrastructure.database.uow import UnitOfWork
+from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, BlackpillCallback
 from source.presentation.telegram.keyboards.keyboards import get_blackpill_exit_ready_keyboard
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, \
     get_back_to_menu_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from source.presentation.telegram.utils import send_long_message, convert_markdown_to_html
+from source.presentation.telegram.utils import send_long_message, convert_markdown_to_html, log_support_dialog
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -37,17 +41,34 @@ async def handle_ready_callback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.message(SupportStates.BLACKPILL_TALK)
-async def handle_blackpill_talking(message: Message, state: FSMContext, bot: Bot, **data):
+
+@router.message(SupportStates.BLACKPILL)
+async def handle_blackpill_talking(
+    message: Message,
+    state: FSMContext,
+    bot: Bot,
+    user_repo: UserRepository,
+    dialogs_repo: UserDialogsLoggingRepository,
+    uow: UnitOfWork,
+    **data,
+):
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
 
     user_id = message.from_user.id
-    context_scope = "calming"
+    context_scope = "blackpill_exit" 
 
     if message.text == "Вернуться в меню":
+        await log_support_dialog(
+            user_id=user_id,
+            context_scope=context_scope,
+            history_service=history,
+            user_repo=user_repo,
+            dialogs_repo=dialogs_repo,
+            uow=uow,
+        )
         await state.clear()
         await history.clear_history(user_id, context_scope)
         await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())

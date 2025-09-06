@@ -12,10 +12,13 @@ from source.application.ai_assistant.ai_assistant_service import AssistantServic
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.application.subscription.subscription_service import SubscriptionService
 from source.core.schemas.assistant_schemas import ContextMessage
+from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
+from source.infrastructure.database.repository.user_repo import UserRepository
+from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from source.presentation.telegram.utils import convert_markdown_to_html
+from source.presentation.telegram.utils import convert_markdown_to_html, log_support_dialog
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -31,13 +34,29 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
 
 
 @router.message(Command("stop"), SupportStates.VENTING)
-async def handle_stop_venting(message: Message, state: FSMContext, **data):
+async def handle_stop_venting(
+    message: Message,
+    state: FSMContext,
+    user_repo: UserRepository,
+    dialogs_repo: UserDialogsLoggingRepository,
+    uow: UnitOfWork,
+    **data,
+):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
 
     user_id = message.from_user.id
     context_scope = "venting"
     logger.info(f"User {user_id} stopped venting session.")
+
+    await log_support_dialog(
+        user_id=user_id,
+        context_scope=context_scope,
+        history_service=history,
+        user_repo=user_repo,
+        dialogs_repo=dialogs_repo,
+        uow=uow,
+    )
 
     await state.clear()
     await history.clear_history(user_id, context_scope)
@@ -77,12 +96,12 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
         try:
             await message.answer(response_text_html, parse_mode=ParseMode.HTML)
         except TelegramBadRequest:
-            logger.warning(f"Failed to parse HTML for user {user_id}. Sending plain text.")
+            logger.warning(f"Ошибка при парсинге HTML для юзера {user_id}. Отправляем обычный текст.")
             await message.answer(response_text)
 
         telegram_id = str(user_id)
         await subscription_service.increment_message_count(telegram_id)
 
     except Exception as e:
-        logger.error(f"Error when scraping user {user_id} in scope {context_scope}: {e}")
+        logger.error(f"Ошибка при обработке информации юзера {user_id} в скопе {context_scope}: {e}")
         await message.answer("Произошла ошибка. Пожалуйста, попробуйте еще раз.")

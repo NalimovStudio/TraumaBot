@@ -10,9 +10,12 @@ from source.application.message_history.message_history_service import MessageHi
 from source.core.lexicon.prompts import KPT_DIARY_PROMPT
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
+from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
+from source.infrastructure.database.repository.user_repo import UserRepository
+from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from source.presentation.telegram.utils import send_long_message, convert_markdown_to_html
+from source.presentation.telegram.utils import send_long_message, convert_markdown_to_html, log_support_dialog
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -75,7 +78,7 @@ async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, *
 
         await send_long_message(message, convert_markdown_to_html(ai_response_text), bot)
     except Exception as e:
-        logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")
+        logger.error(f"Ошибка для получени ИИ запроса {user_id} в скопе {context_scope}: {e}")
         pass
 
     text = "Хорошо. А теперь, опираясь на сказанное, подумай, были ли в этой мысли когнитивные искажения? Например, 'чтение мыслей' или 'катастрофизация'. Можешь перечислить их."
@@ -115,19 +118,35 @@ async def handle_cbt_s6_alternative(message: Message, state: FSMContext, **data)
     await message.answer(text)
 
 @router.message(SupportStates.CBT_S7_RERATING)
-async def handle_cbt_s7_rerating(message: Message, state: FSMContext, **data):
+async def handle_cbt_s7_rerating(
+    message: Message,
+    state: FSMContext,
+    user_repo: UserRepository,
+    dialogs_repo: UserDialogsLoggingRepository,
+    uow: UnitOfWork,
+    **data,
+):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
-    
+
     user_id = message.from_user.id
     context_scope = "cbt"
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     await state.update_data(cbt_rerating=message.text)
     cbt_data = await state.get_data()
     logger.info(f"User {user_id} finished CBT entry: {cbt_data}")
-    
+
+    await log_support_dialog(
+        user_id=user_id,
+        context_scope=context_scope,
+        history_service=history,
+        user_repo=user_repo,
+        dialogs_repo=dialogs_repo,
+        uow=uow,
+    )
+
     await state.clear()
     await history.clear_history(user_id, context_scope)
-    
+
     text = "Спасибо, мы завершили запись в дневнике. Это был важный шаг. Я сохраню эту запись, если ты не против.\n\nВозвращаю тебя в главное меню."
     await message.answer(text, reply_markup=get_main_keyboard())

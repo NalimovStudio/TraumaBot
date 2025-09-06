@@ -1,6 +1,6 @@
 from source.application.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
 from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT, \
-    BLACKPILL_EXIT_PROMPT
+    BLACKPILL_EXIT_PROMPT, PATHWAYS_TO_SOLVE_PROBLEM_PROMPT
 from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
 from source.infrastructure.ai_assistant.ai_assistant import AssistantClient
 
@@ -19,6 +19,19 @@ class AssistantService(AssistantServiceInterface):
         return await self.client.get_response(
             system_prompt=prompt,
             message=message,
+            context_messages=context_messages,
+            temperature=temperature
+        )
+
+    async def get_pathways_to_solve_problem_response(
+            self,
+            prompt: str,
+            context_messages: list[ContextMessage] = [],
+            temperature: float = 0.4,
+    ) -> AssistantResponse:
+        return await self.client.get_response(
+            system_prompt=prompt,
+            message="",  # The prompt contains all info, no new message needed
             context_messages=context_messages,
             temperature=temperature
         )
@@ -54,7 +67,7 @@ class AssistantService(AssistantServiceInterface):
             message: str,
             prompt: str = SPEAK_OUT_PROMPT,
             context_messages: list[ContextMessage] = [],
-            temperature=0.3
+            temperature = 0.3
     ) -> AssistantResponse:
         return await self.client.get_response(
             system_prompt=prompt,
