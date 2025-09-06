@@ -88,7 +88,7 @@ async def process_successful_payment(
     except Exception as e:
         logger.error(f"Error processing payment {purchase_id}: {e}")
 
-@router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
+@webhooks_router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
 async def handle_yookassa_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
