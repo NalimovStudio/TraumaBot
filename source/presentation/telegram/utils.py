@@ -8,9 +8,11 @@ from aiogram.utils.markdown import hbold
 
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.core.schemas.user_schema import UserDialogsLoggingCreateSchema
+from source.core.schemas.user_schema import UserSchema
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
 from source.infrastructure.database.repository.user_repo import UserRepository
 from source.infrastructure.database.uow import UnitOfWork
+
 
 TELEGRAM_MAX_MESSAGE_LENGTH = 4096
 
@@ -32,7 +34,7 @@ async def log_support_dialog(
 
         history_json = json.dumps([msg.model_dump() for msg in full_history], ensure_ascii=False, indent=2)
 
-        user_in_db = await user_repo.get_by_telegram_id(str(user_id))
+        user_in_db: UserSchema = await user_repo.get_schema_by_telegram_id(str(user_id))
         if user_in_db:
             log_schema = UserDialogsLoggingCreateSchema(user_id=user_in_db.id, message=history_json)
             await dialogs_repo.create(log_schema)
