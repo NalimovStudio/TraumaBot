@@ -3,9 +3,6 @@ FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONPATH=/app
 
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    echo "nameserver 1.1.1.1" >> /etc/resolv.conf
-
 # Установка curl с явным зеркалом
 RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.list && \
     echo "deb http://deb.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
@@ -13,7 +10,7 @@ RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.lis
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
-RUN sudo apt install alembic
+RUN pip install alembic
 
 RUN pip install --no-cache-dir poetry>=2.1.4
 
