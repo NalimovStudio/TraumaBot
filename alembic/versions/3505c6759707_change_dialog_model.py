@@ -1,8 +1,8 @@
 """change dialog model
 
-Revision ID: 89aaec8398e2
+Revision ID: 3505c6759707
 Revises: ad64090b7670
-Create Date: 2025-09-07 22:25:29.512038
+Create Date: 2025-09-08 23:43:09.848903
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '89aaec8398e2'
+revision = '3505c6759707'
 down_revision = 'ad64090b7670'
 branch_labels = None
 depends_on = None
