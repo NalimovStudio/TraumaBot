@@ -2,6 +2,7 @@ import json
 import logging
 import re
 from uuid import UUID
+from functools import partial
 
 from aiogram import Bot
 from aiogram.types import Message
@@ -86,3 +87,11 @@ def convert_markdown_to_html(text: str) -> str:
     # Заменяем _курсив_ на <i>курсив</i>
     text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)
     return text
+
+def json_default_serializer(obj):
+    if isinstance(obj, UUID):
+        return str(obj)
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+
+custom_json_dumps = partial(json.dumps, default=json_default_serializer)
+custom_json_loads = json.loads
