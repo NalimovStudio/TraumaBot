@@ -10,7 +10,7 @@ from aiogram.utils.markdown import hbold
 
 from source.core.schemas import UserDialogsLoggingCreateSchema
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
-from source.infrastructure.database.repository.user_repo import UserRepository
+from source.application.user import GetUserSchemaById
 from source.infrastructure.database.uow import UnitOfWork
 
 TELEGRAM_MAX_MESSAGE_LENGTH = 4096
@@ -19,7 +19,7 @@ TELEGRAM_MAX_MESSAGE_LENGTH = 4096
 async def log_message(
     dialogue_id: UUID,
     user_id: int,
-    user_repo: UserRepository,
+    get_user: GetUserSchemaById,
     dialogs_repo: UserDialogsLoggingRepository,
     uow: UnitOfWork,
     text: str,
@@ -28,7 +28,7 @@ async def log_message(
     """Saves a single message to the database."""
     logger = logging.getLogger(__name__)
     try:
-        user_in_db = await user_repo.get_by_telegram_id(str(user_id))
+        user_in_db = await get_user(str(user_id))
         if user_in_db:
             log_schema = UserDialogsLoggingCreateSchema(
                 user_id=user_in_db.id,

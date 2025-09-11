@@ -5,6 +5,7 @@ import uuid
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from aiogram.filters import Command
 from dishka import AsyncContainer
 
 from source.application.ai_assistant.ai_assistant_service import AssistantService
@@ -13,7 +14,7 @@ from source.application.subscription.subscription_service import SubscriptionSer
 from source.core.lexicon.bot import BLACKPILL_EXIT_TEXT, BLACKPILL_AFTER_READY_TEXT_ARRAY
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
-from source.infrastructure.database.repository.user_repo import UserRepository
+from source.application.user import GetUserSchemaById
 from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, BlackpillCallback
 from source.presentation.telegram.keyboards.keyboards import get_blackpill_exit_ready_keyboard, get_main_keyboard, \
@@ -38,7 +39,7 @@ async def handle_blackpill_method(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(BlackpillCallback.filter(), SupportStates.BLACKPILL)
 async def handle_ready_callback(callback: CallbackQuery, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
     state_data = await state.get_data()
@@ -53,6 +54,25 @@ async def handle_ready_callback(callback: CallbackQuery, state: FSMContext, **da
     await callback.message.edit_text(response_text)
     await callback.answer()
 
+@router.message(Command("stop"), SupportStates.BLACKPILL)
+async def handle_stop_blackpill(
+    message: Message,
+    state: FSMContext,
+    **data,
+):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+
+    user_id = message.from_user.id
+    context_scope = "blackpill_exit"
+    logger.info(f"Пользователь {user_id} Остановил сессию blackpill.")
+    
+    await state.clear()
+    await history.clear_history(user_id, context_scope)
+    await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())
+    return
+
+
 
 @router.message(SupportStates.BLACKPILL)
 async def handle_blackpill_talking(message: Message, state: FSMContext, bot: Bot, **data):
@@ -60,7 +80,7 @@ async def handle_blackpill_talking(message: Message, state: FSMContext, bot: Bot
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
     state_data = await state.get_data()

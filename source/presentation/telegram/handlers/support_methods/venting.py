@@ -14,7 +14,7 @@ from source.application.message_history.message_history_service import MessageHi
 from source.application.subscription.subscription_service import SubscriptionService
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
-from source.infrastructure.database.repository.user_repo import UserRepository
+from source.application.user import GetUserSchemaById
 from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
@@ -63,7 +63,7 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
 

@@ -14,7 +14,7 @@ from source.application.subscription.subscription_service import SubscriptionSer
 from source.core.lexicon.prompts import PATHWAYS_TO_SOLVE_PROBLEM_PROMPT
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
-from source.infrastructure.database.repository.user_repo import UserRepository
+from source.application.user import GetUserSchemaById
 from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, ProblemSolvingCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, get_problem_solutions_keyboard
@@ -42,7 +42,7 @@ async def handle_ps_s1_define(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
     state_data = await state.get_data()
@@ -63,7 +63,7 @@ async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **dat
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
     state_data = await state.get_data()
@@ -117,7 +117,7 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
     container: AsyncContainer = data["dishka_container"]
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
     user_id = query.from_user.id
@@ -171,7 +171,7 @@ async def handle_ps_s4_discussion(message: Message, state: FSMContext, bot: Bot,
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
-    user_repo: UserRepository = await container.get(UserRepository)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
     dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
     uow: UnitOfWork = await container.get(UnitOfWork)
     state_data = await state.get_data()
