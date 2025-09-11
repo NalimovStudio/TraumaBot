@@ -28,8 +28,8 @@ router = Router(name=__name__)
 async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} chose 'vent' method.")
     dialogue_id = uuid.uuid4()
-    await state.update_data(dialogue_id=dialogue_id)
-    await state.set_state(SupportStates.VENTING)
+    #await state.update_data(dialogue_id=dialogue_id)
+    #await state.set_state(SupportStates.VENTING)
     text = "Можешь просто писать всё, как идёт. Я буду отвечать коротко и бережно. (в течении 5-10 сек)\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
     await query.message.edit_text(text, reply_markup=None)
     await query.answer()

@@ -8,7 +8,7 @@ from aiogram import Bot
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
 
-from source.core.schemas import UserDialogsLoggingCreateSchema
+from source.core.schemas import UserDialogsLoggingCreateSchema, UserSchema
 from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
 from source.application.user import GetUserSchemaById
 from source.infrastructure.database.uow import UnitOfWork
@@ -28,10 +28,10 @@ async def log_message(
     """Saves a single message to the database."""
     logger = logging.getLogger(__name__)
     try:
-        user_in_db = await get_user(str(user_id))
+        user_in_db: UserSchema = await get_user(str(user_id))
         if user_in_db:
             log_schema = UserDialogsLoggingCreateSchema(
-                user_id=user_in_db.id,
+                user_id=user_in_db.telegram_id,
                 dialogue_id=dialogue_id,
                 role=role,
                 message_text=text
