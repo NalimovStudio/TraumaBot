@@ -20,7 +20,7 @@ class UserDialogsLoggingSchema(BaseModel):
 
 
 class UserDialogsLoggingCreateSchema(BaseModel):
-    user_id: UUID
+    user_id: int
     dialogue_id: UUID
     role: str
     message_text: str
