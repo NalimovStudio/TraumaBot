@@ -25,6 +25,26 @@ from source.presentation.telegram.utils import send_long_message, extract_json_f
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
+@router.message(Command("stop"), SupportStates.PROBLEM_S4_STEPS_DISPLAYED)
+async def handle_stop_venting(
+    message: Message,
+    state: FSMContext,
+    **data,
+):
+    container: AsyncContainer = data["dishka_container"]
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+
+    user_id = message.from_user.id
+    context_scope = "problem_solving"
+    logger.info(f"Пользователь {user_id} Остановил сессию решение проблем.")
+
+    await state.clear()
+    await history.clear_history(user_id, context_scope)
+
+    await message.answer(
+        "Хорошо, мы закончили. Возвращаю в главное меню.",
+        reply_markup=get_main_keyboard()
+    )
 
 @router.callback_query(MethodCallback.filter(F.name == "problem"), SupportStates.METHOD_SELECT)
 async def handle_problem_solving_method(query: CallbackQuery, state: FSMContext):
