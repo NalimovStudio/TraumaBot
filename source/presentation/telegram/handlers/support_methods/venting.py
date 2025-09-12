@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 from aiogram import F, Router
 from aiogram.enums import ParseMode
@@ -13,22 +12,18 @@ from source.application.ai_assistant.ai_assistant_service import AssistantServic
 from source.application.message_history.message_history_service import MessageHistoryService
 from source.application.subscription.subscription_service import SubscriptionService
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
-from source.application.user import GetUserSchemaById
-from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from source.presentation.telegram.utils import convert_markdown_to_html, log_message
+from source.presentation.telegram.utils import convert_markdown_to_html
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 
+@router.callback_query(MethodCallback.filter(F.name == "vent"), SupportStates.METHOD_SELECT)
 async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} chose 'vent' method.")
-    dialogue_id = uuid.uuid4()
-    await state.update_data(dialogue_id=dialogue_id)
     await state.set_state(SupportStates.VENTING)
     text = "Можешь просто писать всё, как идёт. Я буду отвечать коротко и бережно. (в течении 5-10 сек)\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
     await query.message.edit_text(text, reply_markup=None)
@@ -36,17 +31,13 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
 
 
 @router.message(Command("stop"), SupportStates.VENTING)
-async def handle_stop_venting(
-    message: Message,
-    state: FSMContext,
-    **data,
-):
+async def handle_stop_venting(message: Message, state: FSMContext, **data):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
 
     user_id = message.from_user.id
     context_scope = "venting"
-    logger.info(f"Пользователь {user_id} Остановил сессию высказаться.")
+    logger.info(f"User {user_id} stopped venting session.")
 
     await state.clear()
     await history.clear_history(user_id, context_scope)
@@ -63,25 +54,16 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
     assistant: AssistantService = await container.get(AssistantService)
     history: MessageHistoryService = await container.get(MessageHistoryService)
     subscription_service: SubscriptionService = await container.get(SubscriptionService)
-    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
-    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
-    uow: UnitOfWork = await container.get(UnitOfWork)
 
-    state_data = await state.get_data()
-    dialogue_id = state_data["dialogue_id"]
     user_id = message.from_user.id
     context_scope = "venting"
     logger.info(f"User {user_id} is venting. Msg: '{message.text[:30]}...'")
 
-
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
-    await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
+    user_message = ContextMessage(role="user", message=message.text)
+    await history.add_message_to_history(user_id, context_scope, user_message)
     message_history = await history.get_history(user_id, context_scope)
 
     try:
-        await message.answer(
-        "Хорошо, думаю над ответом...\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
-        )
         response = await assistant.get_speak_out_response(
             message=message.text,
             context_messages=message_history
@@ -89,17 +71,18 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
         response_text = response.message
         response_text_html = convert_markdown_to_html(response_text)
 
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, response_text, "assistant")
-        await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response_text))
+        ai_message = ContextMessage(role="assistant", message=response_text)
+        await history.add_message_to_history(user_id, context_scope, ai_message)
 
         try:
             await message.answer(response_text_html, parse_mode=ParseMode.HTML)
         except TelegramBadRequest:
-            logger.warning(f"Ошибка при парсинге HTML для юзера {user_id}. Отправляем обычный текст.")
+            logger.warning(f"Failed to parse HTML for user {user_id}. Sending plain text.")
             await message.answer(response_text)
 
-        await subscription_service.increment_message_count(str(user_id))
+        telegram_id = str(user_id)
+        await subscription_service.increment_message_count(telegram_id)
 
     except Exception as e:
-        logger.error(f"Ошибка при обработке информации юзера {user_id} в скопе {context_scope}: {e}")
+        logger.error(f"Error when scraping user {user_id} in scope {context_scope}: {e}")
         await message.answer("Произошла ошибка. Пожалуйста, попробуйте еще раз.")
