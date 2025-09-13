@@ -6,9 +6,8 @@ from typing import Dict, Any
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from dateutil.relativedelta import relativedelta
-from dishka.integrations.fastapi import DishkaRoute
-from dishka.integrations.fastapi import FromDishka
-from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends
+from dishka.integrations.fastapi import DishkaRoute, FromDishka
+from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends, Path
 
 from source.application.user import GetUserById, MergeUser
 from source.infrastructure.database.models.payment_model import PaymentLogs
@@ -18,6 +17,14 @@ from source.infrastructure.database.repository import PaymentRepository
 logger = logging.getLogger(__name__)
 
 webhooks_router = APIRouter(prefix="/v1/webhooks", route_class=DishkaRoute)
+
+real_secret: str = os.getenv("TELEGRAM_WEBHOOK_SECRET")
+
+
+def check_secret(secret: str = Path(..., include_in_schema=False)):
+    if secret != real_secret:
+        raise HTTPException(status_code=404, detail="Неверный секрет вебхука!")
+    return secret
 
 
 async def process_successful_payment(
@@ -72,7 +79,7 @@ async def process_successful_payment(
 
     except Exception as e:
         logger.error(f"Error processing payment {purchase_id}: {e}")
-        # Здесь можно добавить retry или лог в DLQ, но для простоты - log
+        # Здесь можно добавить retry или лог в DLQ, но для простаты - log
 
 
 @webhooks_router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
@@ -100,16 +107,11 @@ async def handle_yookassa_webhook(
     return {"status": "ok"}
 
 
-from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
-
-webhook_security = OnlyTelegramNetworkWithSecret(
-    real_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET")
-)
-
-
-# @webhooks_router.post("/telegram/{secret}", dependencies=[Depends(webhook_security)])
-@webhooks_router.post("/telegram")
-async def telegram_webhook(request: Request):
+@webhooks_router.post("/telegram/{secret}", include_in_schema=False)
+async def telegram_webhook(
+        request: Request,
+        secret: str = Depends(check_secret)
+):
     try:
         # Get container from app state
         container = request.app.state.dishka_container

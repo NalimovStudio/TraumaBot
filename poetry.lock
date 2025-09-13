@@ -575,21 +575,6 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.8)", "htt
 standard-no-fastapi-cloud-cli = ["email-validator (>=2.0.0)", "fastapi-cli[standard-no-fastapi-cloud-cli] (>=0.0.8)", "httpx (>=0.23.0)", "jinja2 (>=3.1.5)", "python-multipart (>=0.0.18)", "uvicorn[standard] (>=0.12.0)"]
 
 [[package]]
-name = "fastapi-security-telegram-webhook"
-version = "0.2.0"
-description = ""
-optional = false
-python-versions = ">=3.6"
-groups = ["main"]
-files = [
-    {file = "fastapi-security-telegram-webhook-0.2.0.tar.gz", hash = "sha256:aa3c908cfa8ba9305fa483d2958aea52bd4605554fea9f429bbf95c2bf2e2d51"},
-    {file = "fastapi_security_telegram_webhook-0.2.0-py3-none-any.whl", hash = "sha256:22d1575add1a6e239956ccc8fb8819964393d2e5ee8bef181e6f4e5ee63a8df1"},
-]
-
-[package.dependencies]
-fastapi = "*"
-
-[[package]]
 name = "flake8"
 version = "7.3.0"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -2401,4 +2386,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "3230a6a0835b140310db27be260a4767841c561c54a40fcfbc1f273ac14a9d41"
+content-hash = "ad84bdacbf22d692d207a9dd665a68fcceb2696cf53af96736e29d1802175d5c"

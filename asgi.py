@@ -48,14 +48,11 @@ async def lifespan(app: FastAPI):
         bot: Bot = await dishka_container.get(Bot)
         dp: Dispatcher = await dishka_container.get(Dispatcher)
 
-        # install webhook secret
         secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
         if not secret:
             raise ValueError("TELEGRAM_WEBHOOK_SECRET is not set in environment variables")
 
-        # TODO
-        # webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
-        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL")
+        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL") + f"/{secret}"
 
         success = await set_webhook_with_retry(bot, webhook_url)
         if not success:
@@ -76,13 +73,15 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Factory для создания FastAPI приложения"""
 
+    docs_enabled: bool = os.getenv("DOCS_ENABLE", "False") == "True"
+
     app = FastAPI(
         title="TraumaBot API",
         description="API for TraumaBot Telegram bot and fastapi",
         version="1.0.0",
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc"
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None
     )
 
     # Настраиваем Dishka

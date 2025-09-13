@@ -2,7 +2,7 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [ main, dev_arsen, dev_red ]
+    branches: [ main, dev_arsen, dev_red, dev_arsen_feat, dev_red_feat ]
   workflow_dispatch:
 
 jobs:
@@ -133,8 +133,11 @@ jobs:
             
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               echo ENVIRONMENT=development >> .env
+              echo DOCS_ENABLE=False >> .env
             else
               echo ENVIRONMENT=staging >> .env
+              echo DOCS_ENABLE=True >> .env
+
             fi
             echo LOG_LEVEL=INFO >> .env
           EOF

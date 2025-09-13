@@ -48,7 +48,6 @@ dependencies = [
     "fastapi (>=0.116.1,<0.117.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "python-dateutil (>=2.9.0.post0,<3.0.0)",
-    "fastapi-security-telegram-webhook (>=0.2.0,<0.3.0)",
 ]
 
 [tool.poetry]
