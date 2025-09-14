@@ -56,13 +56,13 @@ class User(BaseModel):
 
 
 class UserDialogsLogging(BaseModel, TimestampCreatedAtMixin):
-    """Таблица для логирования сообщений в диалогах"""
     __tablename__ = "users_dialogs_logging"
 
-    user_id: Mapped[int] = mapped_column(
+
+    user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id"),
         nullable=False,
-        comment="ID пользователя, совершившего запрос"
+        comment="ID пользователя из таблицы users"
     )
     user: Mapped["User"] = relationship(
         "User",

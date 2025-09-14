@@ -18,20 +18,21 @@ TELEGRAM_MAX_MESSAGE_LENGTH = 4096
 
 async def log_message(
     dialogue_id: UUID,
-    user_id: int,
+    telegram_id: str,  
     get_user: GetUserSchemaById,
     dialogs_repo: UserDialogsLoggingRepository,
     uow: UnitOfWork,
     text: str,
     role: str,
 ):
-    """Saves a single message to the database."""
+    """Сохраняет сообщение в бд"""
     logger = logging.getLogger(__name__)
     try:
-        user_in_db: UserSchema = await get_user(str(user_id))
+        # Ищем пользователя по telegram_id
+        user_in_db: UserSchema = await get_user(telegram_id)
         if user_in_db:
             log_schema = UserDialogsLoggingCreateSchema(
-                user_id=user_in_db.telegram_id,
+                user_id=user_in_db.id,  # Это UUID, а не telegram_id
                 dialogue_id=dialogue_id,
                 role=role,
                 message_text=text
@@ -39,10 +40,10 @@ async def log_message(
             await dialogs_repo.create(log_schema)
             await uow.commit()
         else:
-            logger.warning(f"User with telegram_id {user_id} not found in DB. Cannot save message.")
+            logger.warning(f"User with telegram_id {telegram_id} not found in DB. Cannot save message.")
 
     except Exception as e:
-        logger.error(f"Failed to save message for user {user_id}: {e}")
+        logger.error(f"Failed to save message for user {telegram_id}: {e}")
         await uow.rollback()
 
 

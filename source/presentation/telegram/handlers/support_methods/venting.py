@@ -74,7 +74,7 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
     logger.info(f"User {user_id} is venting. Msg: '{message.text[:30]}...'")
 
 
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     message_history = await history.get_history(user_id, context_scope)
 
@@ -89,7 +89,7 @@ async def handle_venting_message(message: Message, state: FSMContext, **data):
         response_text = response.message
         response_text_html = convert_markdown_to_html(response_text)
 
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, response_text, "assistant")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, response_text, "assistant")
         await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response_text))
 
         try:

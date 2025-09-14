@@ -91,7 +91,7 @@ async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **dat
     user_id = message.from_user.id
     context_scope = "problem_solving"
     
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
 
     await message.answer("Спасибо. Я подумаю и предложу варианты действий. Минутку...")
@@ -103,7 +103,7 @@ async def handle_ps_s2_goal(message: Message, state: FSMContext, bot: Bot, **dat
         raw_response = await assistant.get_problems_solver_response(message=message.text, context_messages=message_history)
         logger.info(f"Raw AI response for user {user_id} in scope {context_scope}: {raw_response.message}")
         
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, raw_response.message, "assistant")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, raw_response.message, "assistant")
         await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=raw_response.message))
 
         json_string = extract_json_from_markdown(raw_response.message)
@@ -150,7 +150,7 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
     await state.update_data(chosen_option=chosen_option_data)
     
     choice_message = f"Выбран вариант: {chosen_option_text}"
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, choice_message, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, choice_message, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=choice_message))
     
     prompt = PATHWAYS_TO_SOLVE_PROBLEM_PROMPT.format(problem_definition=state_data.get("problem_definition"), problem_goal=state_data.get("problem_goal"), chosen_option=chosen_option_text)
@@ -159,7 +159,7 @@ async def handle_ps_s3_choice(query: CallbackQuery, callback_data: ProblemSolvin
         response = await assistant.get_pathways_to_solve_problem_response(prompt=prompt, context_messages=await history.get_history(user_id, context_scope))
         logger.info(f"Generated steps for user {user_id}: {response.message}")
         
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, response.message, "assistant")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, response.message, "assistant")
         await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response.message))
 
         response_text = f"{response.message}\n\nЧто думаешь об этих шагах? Какой из них кажется наиболее реальным для начала? (Чтобы закончить, отправь /stop)"
@@ -199,7 +199,7 @@ async def handle_ps_s4_discussion(message: Message, state: FSMContext, bot: Bot,
     user_id = message.from_user.id
     context_scope = "problem_solving"
 
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     message_history = await history.get_history(user_id, context_scope)
 
@@ -210,7 +210,7 @@ async def handle_ps_s4_discussion(message: Message, state: FSMContext, bot: Bot,
         response = await assistant.get_speak_out_response(message=message.text, context_messages=message_history)
         response_text = response.message
         
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, response_text, "assistant")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, response_text, "assistant")
         await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response_text))
         
         await send_long_message(message, convert_markdown_to_html(response_text), bot)

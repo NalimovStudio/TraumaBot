@@ -8,8 +8,8 @@ from source.core.enum import UserType, SubscriptionType
 
 
 class UserDialogsLoggingSchema(BaseModel):
-    id: UUID = Field(..., description="ID диалога в формате UUID")
-    user_id: int = Field(..., description="Телеграм айди")
+    id: UUID = Field(..., description="ID записи лога в формате UUID")
+    user_id: UUID = Field(..., description="ID пользователя из таблицы users")  # Меняем тип на UUID
     dialogue_id: UUID = Field(..., description="ID сессии диалога")
     role: str = Field(..., description="Роль отправителя (user или assistant)")
     message_text: str = Field(..., description="Текст сообщения")
@@ -20,7 +20,7 @@ class UserDialogsLoggingSchema(BaseModel):
 
 
 class UserDialogsLoggingCreateSchema(BaseModel):
-    user_id: int
+    user_id: UUID  # Меняем тип на UUID
     dialogue_id: UUID
     role: str
     message_text: str

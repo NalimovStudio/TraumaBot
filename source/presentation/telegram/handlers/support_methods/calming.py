@@ -42,7 +42,7 @@ async def handle_calming_feedback(query: CallbackQuery, callback_data: CalmingCa
     state_data = await state.get_data()
     dialogue_id = state_data["dialogue_id"]
     
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, f"User action: {action}", "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, f"User action: {action}", "user")
 
     if action == "another_cycle":
         await query.answer("Хорошо, давай попробуем еще раз.")
@@ -72,13 +72,13 @@ async def handle_calming_talk(message: Message, state: FSMContext, bot: Bot, use
     context_scope = "calming"
 
     if message.text == "Вернуться в меню":
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, "User action: Вернуться в меню", "user")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, "User action: Вернуться в меню", "user")
         await state.clear()
         await history.clear_history(user_id, context_scope)
         await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())
         return
 
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     message_history = await history.get_history(user_id, context_scope)
 
@@ -86,7 +86,7 @@ async def handle_calming_talk(message: Message, state: FSMContext, bot: Bot, use
         response = await assistant.get_calm_response(message=message.text, context_messages=message_history)
         ai_response_text = response.message
         
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, ai_response_text, "assistant")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, ai_response_text, "assistant")
         await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=ai_response_text))
         
         await send_long_message(message, convert_markdown_to_html(ai_response_text), bot, keyboard=get_back_to_menu_keyboard())

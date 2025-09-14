@@ -72,7 +72,7 @@ async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, u
     state_data = await state.get_data()
     dialogue_id = state_data["dialogue_id"]
 
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     
     await state.update_data(cbt_thought=message.text)
@@ -89,7 +89,7 @@ async def handle_cbt_s3_thought(message: Message, state: FSMContext, bot: Bot, u
         response = await assistant.get_kpt_diary_response(message=message.text, context_messages=message_history, prompt=cbt_prompt)
         ai_response_text = response.message
         
-        await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, ai_response_text, "assistant")
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, ai_response_text, "assistant")
         await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=ai_response_text))
 
         await send_long_message(message, convert_markdown_to_html(ai_response_text), bot)
@@ -158,7 +158,7 @@ async def handle_cbt_s7_rerating(message: Message, state: FSMContext, user_repo:
     user_id = message.from_user.id
     context_scope = "cbt"
 
-    await log_message(dialogue_id, user_id, user_repo, dialogs_repo, uow, message.text, "user")
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
     await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
     
     await state.update_data(cbt_rerating=message.text)
