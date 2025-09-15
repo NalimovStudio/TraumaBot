@@ -1,4 +1,3 @@
-# app.py (главный ASGI файл)
 import asyncio
 import logging
 import os
@@ -8,7 +7,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramRetryAfter
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
-from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
 
 from source.core.logging.logging_config import configure_logging
 from source.infrastructure.dishka import make_dishka_container
@@ -23,7 +21,6 @@ dishka_container = make_dishka_container()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan manager for creating Dishka container and setting Telegram webhook"""
-
     async def set_webhook_with_retry(bot: Bot, webhook_url: str, max_attempts: int = 3):
         for attempt in range(1, max_attempts + 1):
             try:
@@ -41,12 +38,26 @@ async def lifespan(app: FastAPI):
                 logger.error(f"❌ Failed to set webhook: {e}")
                 return False
 
+    async def delete_webhook(bot: Bot):
+        """Удаляет вебхук при завершении работы"""
+        try:
+            await bot.delete_webhook(drop_pending_updates=True)
+            logger.info("✅ Old webhook deleted, pending updates dropped")
+
+            await asyncio.sleep(2)
+
+        except Exception as e:
+            logger.error(f"❌ Failed to delete webhook: {e}")
+
     try:
         logger.info("🔄 Starting Dishka container...")
 
         # Получаем зависимости из контейнера
         bot: Bot = await dishka_container.get(Bot)
         dp: Dispatcher = await dishka_container.get(Dispatcher)
+
+        # Удаляем вебхук перед запуском
+        await delete_webhook(bot)
 
         secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
         if not secret:
@@ -57,7 +68,6 @@ async def lifespan(app: FastAPI):
         success = await set_webhook_with_retry(bot, webhook_url)
         if not success:
             raise RuntimeError("Failed to set Telegram webhook")
-
         logger.info("✅ Application startup complete")
         yield
 
@@ -69,10 +79,10 @@ async def lifespan(app: FastAPI):
         await dishka_container.close()
         logger.info("✅ Dishka container closed")
 
-
 def create_app() -> FastAPI:
     """Factory для создания FastAPI приложения"""
 
+    # для прода — отключить
     docs_enabled: bool = os.getenv("DOCS_ENABLE", "False") == "True"
 
     app = FastAPI(
