@@ -53,3 +53,18 @@ class UserSchemaRequest(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserCharacteristicSchema(BaseModel):
+    """Схема характеристики юзера"""
+    current_mood: str = Field(..., )
+    mood_trend: Optional[str] = Field(default=None, )
+    mood_stability: str = Field(..., )
+    risk_group: str = Field(..., )
+    stress_level: str = Field(..., )
+    anxiety_level: str = Field(..., )
+    strengths: list[str] = Field(..., )
+    weaknesses: list[str] = Field(..., )
+    communication_style: str = Field(..., )
+    personal_insights: list[str] = Field(..., )
+    recommendations: list[str] = Field(..., )
+    characteristic_accuracy: str = Field(..., )
