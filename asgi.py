@@ -21,6 +21,7 @@ dishka_container = make_dishka_container()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan manager for creating Dishka container and setting Telegram webhook"""
+
     async def set_webhook_with_retry(bot: Bot, webhook_url: str, max_attempts: int = 3):
         for attempt in range(1, max_attempts + 1):
             try:
@@ -78,6 +79,7 @@ async def lifespan(app: FastAPI):
         logger.info("🔄 Closing Dishka container...")
         await dishka_container.close()
         logger.info("✅ Dishka container closed")
+
 
 def create_app() -> FastAPI:
     """Factory для создания FastAPI приложения"""

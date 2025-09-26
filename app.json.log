@@ -8043,3 +8043,5 @@
 {"asctime": "2025-08-24 22:57:17,355", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Creating Dishka container..."}
 {"asctime": "2025-08-24 22:57:17,379", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
 {"asctime": "2025-08-24 22:57:17,373", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
+{"asctime": "2025-09-13 01:13:17,697", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-09-13 01:13:17,700", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}

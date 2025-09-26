@@ -147,12 +147,12 @@ class UserCharacteristic(BaseModel, TimestampCreatedAtMixin, TimestampUpdatedAtM
     anxiety_level: Mapped[str] = mapped_column(String(50), comment="уровень тревожности")
 
     # personality_traits
-    strengths: Mapped[list[str]] = mapped_column(ARRAY, comment="положительные трейты")
-    weaknesses: Mapped[list[str]] = mapped_column(ARRAY, comment="негативные трейты")
+    strengths: Mapped[list[str]] = mapped_column(ARRAY(String(200)), comment="положительные трейты")
+    weaknesses: Mapped[list[str]] = mapped_column(ARRAY(String(200)), comment="негативные трейты")
     communication_style: Mapped[str] = mapped_column(String(150), comment="стиль коммуникации")
 
-    personal_insights: Mapped[list[str]] = mapped_column(ARRAY, comment="склонности к..")
-    recommendations: Mapped[list[str]] = mapped_column(ARRAY, comment="рекомендации массив")
+    personal_insights: Mapped[list[str]] = mapped_column(ARRAY(String(200)), comment="психологические инсайты и склонности")
+    recommendations: Mapped[list[str]] = mapped_column(ARRAY(String(200)), comment="рекомендации массив")
 
     characteristic_accuracy: Mapped[str] = mapped_column(String(10), comment="насколько точная была оценка ИИ в процентах")
 
