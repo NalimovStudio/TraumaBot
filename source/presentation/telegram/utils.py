@@ -39,7 +39,7 @@ async def log_message(
             )
             await dialogs_repo.create(log_schema)
             await uow.commit()
-            logger.info(f"Saved message in DATABASE for user {telegram_id} dialogue_id {dialogue_id}")
+            logger.info(f"Saved message in DATABASE  for user {telegram_id} dialogue_id {dialogue_id}")
         else:
             logger.warning(f"User with telegram_id {telegram_id} not found in DB. Cannot save message.")
 
