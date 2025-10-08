@@ -10,6 +10,8 @@ RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.lis
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip
+
 RUN pip install alembic
 
 RUN pip install --no-cache-dir poetry>=2.1.4
