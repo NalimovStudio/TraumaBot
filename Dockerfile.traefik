@@ -1,4 +1,4 @@
-FROM traefik:v2.9
+FROM traefik:2.11-alpine
 
 COPY traefik-entrypoint.sh /app/traefik-entrypoint.sh
 

@@ -8,7 +8,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramRetryAfter
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
-from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
 
 from source.core.logging.logging_config import configure_logging
 from source.infrastructure.dishka import make_dishka_container
