@@ -106,7 +106,7 @@ class UserMood(BaseModel, TimestampCreatedAtMixin):
 
     user: Mapped["User"] = relationship(
         "User",
-        back_populates="logging_requests",
+        back_populates="user_moods",
         lazy="selectin"
     )
 
@@ -132,7 +132,7 @@ class UserCharacteristic(BaseModel, TimestampCreatedAtMixin, TimestampUpdatedAtM
 
     user: Mapped["User"] = relationship(
         "User",
-        back_populates="logging_requests",
+        back_populates="user_characteristics",
         lazy="selectin"
     )
 
