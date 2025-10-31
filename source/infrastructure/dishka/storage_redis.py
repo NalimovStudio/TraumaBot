@@ -10,6 +10,7 @@ from dishka import AnyOf, Provider, Scope, provide
 from redis.asyncio import Redis
 
 from source.infrastructure.config import RedisConfig
+from source.presentation.telegram.utils import custom_json_loads, custom_json_dumps
 
 
 class RedisProvider(Provider):
@@ -26,7 +27,9 @@ class RedisProvider(Provider):
     def get_redis_storage(self, redis: Redis) -> AnyOf[BaseStorage, RedisStorage]:
         return RedisStorage(
             redis=redis,
-            key_builder=DefaultKeyBuilder(with_destiny=True)
+            key_builder=DefaultKeyBuilder(with_destiny=True),
+            json_loads=custom_json_loads,
+            json_dumps=custom_json_dumps
         )
     
     @provide

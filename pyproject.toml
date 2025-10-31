@@ -48,6 +48,8 @@ dependencies = [
     "fastapi (>=0.116.1,<0.117.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "python-dateutil (>=2.9.0.post0,<3.0.0)",
+    "nats-py (>=2.11.0,<3.0.0)",
+    "faststream (>=0.5.48,<0.6.0)",
 ]
 
 [tool.poetry]

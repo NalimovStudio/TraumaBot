@@ -124,7 +124,7 @@ if __name__ == "__main__":
     logger.info(f"🚀 Starting TraumaBot API on {host}:{port}")
 
     uvicorn.run(
-        "app:app",
+        "asgi:app",
         host=host,
         port=port,
         reload=reload,

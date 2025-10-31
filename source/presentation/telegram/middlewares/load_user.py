@@ -10,18 +10,19 @@ from source.application.user import CreateUser
 from source.core.schemas.user_schema import UserSchemaRequest, UserSchema
 from source.application.user.get_by_id import GetUserSchemaById
 
+
 class LoadUserMiddleware(BaseMiddleware):
     async def __call__(
-        self, 
-        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]], 
-        event: TelegramObject, 
-        data: dict[str, Any]
+            self,
+            handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
+            event: TelegramObject,
+            data: dict[str, Any]
     ):
         if not data.get("event_from_user"):
             return await handler(event, data)
 
         aiogram_user: TelegramUser = data["event_from_user"]
-        
+
         try:
             container: AsyncContainer = data["dishka_container"]
             get_user: GetUserSchemaById = await container.get(GetUserSchemaById)
@@ -40,10 +41,10 @@ class LoadUserMiddleware(BaseMiddleware):
                     )
                 )
                 logging.info(f"User {aiogram_user.id} created.")
-            
+
             data["user"] = user
             return await handler(event, data)
-                
+
         except Exception as e:
             logging.error(f"Error in LoadUserMiddleware for user {aiogram_user.id}: {e}", exc_info=True)
             return None

@@ -8045,3 +8045,49 @@
 {"asctime": "2025-08-24 22:57:17,373", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container created successfully"}
 {"asctime": "2025-09-13 01:13:17,697", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
 {"asctime": "2025-09-13 01:13:17,700", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:42:06,027", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:42:06,028", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:42:24,593", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:42:24,596", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:46:55,692", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:46:55,695", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:47:32,152", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:47:32,160", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:49:56,859", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:49:56,862", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:49:56,897", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Starting Dishka container..."}
+{"asctime": "2025-10-30 16:49:57,417", "levelname": "INFO", "name": "asgi", "message": "\u2705 Old webhook deleted, pending updates dropped"}
+{"asctime": "2025-10-30 16:49:59,517", "levelname": "INFO", "name": "asgi", "message": "\u2705 Webhook successfully set to: https://test.xn--80aa9aoji.xn--p1ai/v1/webhooks/telegram/fuckmeindaassDFKGwvrWOEFkqadz"}
+{"asctime": "2025-10-30 16:49:59,517", "levelname": "INFO", "name": "asgi", "message": "\u2705 Application startup complete"}
+{"asctime": "2025-10-30 16:51:16,864", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-10-30 16:51:16,884", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-10-30 16:51:16,892", "levelname": "ERROR", "name": "asyncio", "message": "Unclosed client session\nclient_session: <aiohttp.client.ClientSession object at 0x10d63a5a0>"}
+{"asctime": "2025-10-30 16:51:21,993", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:51:21,996", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:51:22,034", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Starting Dishka container..."}
+{"asctime": "2025-10-30 16:51:22,414", "levelname": "INFO", "name": "asgi", "message": "\u2705 Old webhook deleted, pending updates dropped"}
+{"asctime": "2025-10-30 16:51:24,515", "levelname": "INFO", "name": "asgi", "message": "\u2705 Webhook successfully set to: https://test.xn--80aa9aoji.xn--p1ai/v1/webhooks/telegram/fuckmeindaassDFKGwvrWOEFkqadz"}
+{"asctime": "2025-10-30 16:51:24,516", "levelname": "INFO", "name": "asgi", "message": "\u2705 Application startup complete"}
+{"asctime": "2025-10-30 16:55:07,209", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-10-30 16:55:07,221", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-10-30 16:55:07,223", "levelname": "ERROR", "name": "asyncio", "message": "Unclosed client session\nclient_session: <aiohttp.client.ClientSession object at 0x10674e420>"}
+{"asctime": "2025-10-30 16:55:10,892", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 0.0.0.0:8000"}
+{"asctime": "2025-10-30 16:55:10,894", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:55:10,908", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Starting Dishka container..."}
+{"asctime": "2025-10-30 16:55:11,548", "levelname": "INFO", "name": "asgi", "message": "\u2705 Old webhook deleted, pending updates dropped"}
+{"asctime": "2025-10-30 16:55:13,646", "levelname": "INFO", "name": "asgi", "message": "\u2705 Webhook successfully set to: https://test.xn--80aa9aoji.xn--p1ai/v1/webhooks/telegram/fuckmeindaassDFKGwvrWOEFkqadz"}
+{"asctime": "2025-10-30 16:55:13,653", "levelname": "INFO", "name": "asgi", "message": "\u2705 Application startup complete"}
+{"asctime": "2025-10-30 16:55:37,421", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-10-30 16:55:37,440", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-10-30 16:55:37,442", "levelname": "ERROR", "name": "asyncio", "message": "Unclosed client session\nclient_session: <aiohttp.client.ClientSession object at 0x11b93acc0>"}
+{"asctime": "2025-10-30 16:55:37,443", "levelname": "ERROR", "name": "asyncio", "message": "Unclosed connector\nconnections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x11b94d490>, 1751197.4333875)])']\nconnector: <aiohttp.connector.TCPConnector object at 0x11b93ac30>"}
+{"asctime": "2025-10-30 16:55:45,051", "levelname": "INFO", "name": "__main__", "message": "\ud83d\ude80 Starting TraumaBot API on 85.193.94.57:8000"}
+{"asctime": "2025-10-30 16:55:45,053", "levelname": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"asctime": "2025-10-30 16:55:45,068", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Starting Dishka container..."}
+{"asctime": "2025-10-30 16:55:45,376", "levelname": "INFO", "name": "asgi", "message": "\u2705 Old webhook deleted, pending updates dropped"}
+{"asctime": "2025-10-30 16:55:47,477", "levelname": "INFO", "name": "asgi", "message": "\u2705 Webhook successfully set to: https://test.xn--80aa9aoji.xn--p1ai/v1/webhooks/telegram/fuckmeindaassDFKGwvrWOEFkqadz"}
+{"asctime": "2025-10-30 16:55:47,479", "levelname": "INFO", "name": "asgi", "message": "\u2705 Application startup complete"}
+{"asctime": "2025-10-30 16:55:47,481", "levelname": "INFO", "name": "asgi", "message": "\ud83d\udd04 Closing Dishka container..."}
+{"asctime": "2025-10-30 16:55:47,482", "levelname": "INFO", "name": "asgi", "message": "\u2705 Dishka container closed"}
+{"asctime": "2025-10-30 16:55:47,482", "levelname": "ERROR", "name": "asyncio", "message": "Unclosed client session\nclient_session: <aiohttp.client.ClientSession object at 0x11bc3a7b0>"}
+{"asctime": "2025-10-30 16:55:47,482", "levelname": "ERROR", "name": "asyncio", "message": "Unclosed connector\nconnections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x11bc50ef0>, 1751231.263508041)])']\nconnector: <aiohttp.connector.TCPConnector object at 0x11bc3a810>"}

@@ -29,21 +29,17 @@ def get_url_from_env() -> str:
             return default
         return value
 
-    def get_vars(prefix: str = ""):
+    def get_vars():
         """set prefix if staging"""
-        db_user = get_env_var(key=prefix + 'DB_USER', default='admin')
-        db_password = get_env_var(key=prefix + 'DB_PASSWORD', default='admin')
-        db_host = get_env_var(key=prefix + 'WEB_HOST', default='')
-        db_port = get_env_var(key=prefix + 'DB_PORT', default='5432')
-        db_name = get_env_var(key=prefix + 'DB_NAME', default='psychoAI_db')
+        db_user = get_env_var(key='DB_USER', default='admin')
+        db_password = get_env_var(key='DB_PASSWORD', default='admin')
+        db_host = get_env_var(key='DB_HOST', default='')
+        db_port = get_env_var(key='DB_PORT', default='5432')
+        db_name = get_env_var(key='DB_NAME', default='psychoAI_db')
         return db_user, db_password, db_host, db_port, db_name
 
     # Get environment variables
-    if get_env_var("ENVIRONMENT") == "development":
-        db_user, db_password, db_host, db_port, db_name = get_vars()
-    else:
-        db_user, db_password, db_host, db_port, db_name = get_vars("TEST_")
-
+    db_user, db_password, db_host, db_port, db_name = get_vars()
     return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
