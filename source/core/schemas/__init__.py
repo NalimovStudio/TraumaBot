@@ -1,13 +1,13 @@
 from .user_schema import (
     UserSchema,
     UserSchemaRequest,
-    UserLogSchema,
-    UserLogCreateSchema,
+    UserDialogsLoggingSchema,
+    UserDialogsLoggingCreateSchema,
 )
 
 __all__ = [
     "UserSchema",
     "UserSchemaRequest",
-    "UserLogSchema",
-    "UserLogCreateSchema",
+    "UserDialogsLoggingSchema",
+    "UserDialogsLoggingCreateSchema",
 ]

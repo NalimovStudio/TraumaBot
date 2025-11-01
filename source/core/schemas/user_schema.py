@@ -7,10 +7,11 @@ from pydantic import BaseModel, Field
 from source.core.enum import UserType, SubscriptionType
 
 
-class UserLogSchema(BaseModel):
+class UserDialogsLoggingSchema(BaseModel):
     id: UUID = Field(..., description="ID записи лога в формате UUID")
-    user_id: UUID = Field(..., description="ID пользователя из таблицы users")
-    dialog_id: UUID = Field(..., description="dialog id")
+    user_id: UUID = Field(..., description="ID пользователя из таблицы users")  # Меняем тип на UUID
+    dialogue_id: UUID = Field(..., description="ID сессии диалога")
+    role: str = Field(..., description="Роль отправителя (user или assistant)")
     message_text: str = Field(..., description="Текст сообщения")
     created_at: datetime = Field(..., description="когда сообщение отправлено")
 
@@ -18,9 +19,10 @@ class UserLogSchema(BaseModel):
         from_attributes = True
 
 
-class UserLogCreateSchema(BaseModel):
-    user_id: UUID
-    dialog_id: UUID = Field(..., description="dialog id")
+class UserDialogsLoggingCreateSchema(BaseModel):
+    user_id: UUID  # Меняем тип на UUID
+    dialogue_id: UUID
+    role: str
     message_text: str
 
 

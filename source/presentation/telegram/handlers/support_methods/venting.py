@@ -1,5 +1,4 @@
 import logging
-import random
 import uuid
 
 from aiogram import F, Router
@@ -20,11 +19,13 @@ from source.core.lexicon import message_templates
 from source.core.lexicon.message_templates import VENTING_START
 from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.materials.get_file import get_file_by_name
+from source.infrastructure.database.repository.dialogs_logging_repo import UserDialogsLoggingRepository
+from source.application.user import GetUserSchemaById
+from source.infrastructure.database.uow import UnitOfWork
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from source.presentation.telegram.utils import convert_markdown_to_html
+from source.presentation.telegram.utils import convert_markdown_to_html, log_message
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -48,7 +49,6 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     )
     await query.answer()
 
-
 @router.message(Command("stop"), SupportStates.VENTING)
 async def handle_stop_venting(
     message: Message,
@@ -60,7 +60,7 @@ async def handle_stop_venting(
 
     user_telegram_id = str(message.from_user.id)
     context_scope = "venting"
-    logger.info(f"Пользователь {user_telegram_id} Остановил сессию высказаться.")
+    logger.info(f"Пользователь {user_id} Остановил сессию высказаться.")
 
     await state.clear()
     await history.clear_history(user_telegram_id, context_scope)
@@ -72,21 +72,18 @@ async def handle_stop_venting(
 
 
 @router.message(SupportStates.VENTING)
-@inject
-async def handle_venting_message(
-    message: Message,
-    state: FSMContext,
-    create_user_log: FromDishka[CreateUserLog],
-    assistant_service: FromDishka[AssistantService],
-    message_history_service: FromDishka[MessageHistoryService],
-    subscription_service: FromDishka[SubscriptionService],
-    get_user_schema_interactor: FromDishka[GetUserSchemaById],
-):
+async def handle_venting_message(message: Message, state: FSMContext, **data):
+    container: AsyncContainer = data["dishka_container"]
+    assistant: AssistantService = await container.get(AssistantService)
+    history: MessageHistoryService = await container.get(MessageHistoryService)
+    subscription_service: SubscriptionService = await container.get(SubscriptionService)
+    user_repo: GetUserSchemaById = await container.get(GetUserSchemaById)
+    dialogs_repo: UserDialogsLoggingRepository = await container.get(UserDialogsLoggingRepository)
+    uow: UnitOfWork = await container.get(UnitOfWork)
+
     state_data = await state.get_data()
     dialogue_id = state_data["dialogue_id"]
-    user_telegram_id = str(message.from_user.id)
-    user: UserSchema = await get_user_schema_interactor(telegram_id=user_telegram_id)
-
+    user_id = message.from_user.id
     context_scope = "venting"
     logger.info(f"User {user_telegram_id} is venting. Msg: '{message.text[:30]}...'")
 
@@ -100,18 +97,16 @@ async def handle_venting_message(
     )
     logger.info(f"User log created: dialog_id = {dialogue_id}")
 
-    await message_history_service.add_message_to_history(
-        user_telegram_id, context_scope, ContextMessage(role="user", message=message.text)
-    )
-    message_history = await message_history_service.get_history(user_telegram_id, context_scope)
+
+    await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, message.text, "user")
+    await history.add_message_to_history(user_id, context_scope, ContextMessage(role="user", message=message.text))
+    message_history = await history.get_history(user_id, context_scope)
 
     try:
-        message_waiting: Message = await message.answer(
-            random.choice(message_templates.VENTING_WAITING_RESPONSE)
+        await message.answer(
+        "Хорошо, думаю над ответом...\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
         )
-        # TODO: utils.get_waiting_message(support_method: SUPPORT_METHODS) + lexicon
-
-        response = await assistant_service.get_speak_out_response(
+        response = await assistant.get_speak_out_response(
             message=message.text,
             context_messages=message_history
         )
@@ -123,16 +118,17 @@ async def handle_venting_message(
 
         response_text_html = convert_markdown_to_html(response_text)
 
-        await message_waiting.delete()
+        await log_message(dialogue_id, str(user_id), user_repo, dialogs_repo, uow, response_text, "assistant")
+        await history.add_message_to_history(user_id, context_scope, ContextMessage(role="assistant", message=response_text))
 
         try:
             await message.answer(response_text_html, parse_mode=ParseMode.HTML)
         except TelegramBadRequest:
-            logger.warning(f"Ошибка при парсинге HTML для юзера {user_telegram_id}. Отправляем обычный текст.")
+            logger.warning(f"Ошибка при парсинге HTML для юзера {user_id}. Отправляем обычный текст.")
             await message.answer(response_text)
 
-        await subscription_service.increment_message_count(user_telegram_id)
+        await subscription_service.increment_message_count(str(user_id))
 
     except Exception as e:
-        logger.error(f"Ошибка при обработке информации юзера {user_telegram_id} в скопе {context_scope}: {e}")
+        logger.error(f"Ошибка при обработке информации юзера {user_id} в скопе {context_scope}: {e}")
         await message.answer("Произошла ошибка. Пожалуйста, попробуйте еще раз.")

@@ -1,9 +1,7 @@
 from source.application.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
 from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT, \
-    BLACKPILL_EXIT_PROMPT, GET_USER_CHARACTERISTIC
-from source.core.schemas import UserLogSchema
-from source.core.schemas.assistant_schemas import AssistantResponse, UserCharacteristicAssistantResponse
-from source.core.schemas.user_schema import UserMoodSchema
+    BLACKPILL_EXIT_PROMPT, PATHWAYS_TO_SOLVE_PROBLEM_PROMPT
+from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
 from source.infrastructure.ai_assistant.ai_assistant import AssistantClient
 from source.infrastructure.database.models.base_model import S
 
@@ -31,11 +29,9 @@ class AssistantService(AssistantServiceInterface):
     async def get_pathways_to_solve_problem_response(
             self,
             prompt: str,
-            context_messages=None,
+            context_messages: list[ContextMessage] = [],
             temperature: float = 0.4,
     ) -> AssistantResponse:
-        if context_messages is None:
-            context_messages = []
         return await self.client.get_response(
             system_prompt=prompt,
             message="",  # The prompt contains all info, no new message needed
@@ -77,8 +73,8 @@ class AssistantService(AssistantServiceInterface):
             self,
             message: str,
             prompt: str = SPEAK_OUT_PROMPT,
-            context_messages=None,
-            temperature=0.3
+            context_messages: list[ContextMessage] = [],
+            temperature = 0.3
     ) -> AssistantResponse:
         if context_messages is None:
             context_messages = []

@@ -1,36 +1,40 @@
+from fastapi import APIRouter, status, Request, BackgroundTasks
+from typing import Dict, Any
 import logging
 import os
 from datetime import datetime
-from typing import Dict, Any
 
 from aiogram import Bot, Dispatcher
+from source.application.subscription.subscription_service import SubscriptionService 
+from source.infrastructure.database.repository import PaymentRepository
+from source.infrastructure.database.models.payment_model import PaymentLogs
+from source.infrastructure.database.models.user_model import User
+from source.application.user import GetUserSchemaById, MergeUser
+from source.application.payment.merge import MergePayment
+from source.core.schemas.user_schema import UserSchema
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+
+
+
 from aiogram.types import Update
 from dateutil.relativedelta import relativedelta
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends, Path
-from source.application.payment.merge import MergePayment
+from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends
+from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
 
-from source.application.user import MergeUser, GetUserSchemaById
-from source.core.schemas.user_schema import UserSchema
+
 from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.repository import PaymentRepository
+
 
 logger = logging.getLogger(__name__)
 
 webhooks_router = APIRouter(prefix="/v1/webhooks", route_class=DishkaRoute)
 
-real_secret: str = os.getenv("TELEGRAM_WEBHOOK_SECRET")
-
-
-def check_secret(secret: str = Path(..., include_in_schema=False)):
-    if secret != real_secret:
-        raise HTTPException(status_code=404, detail="Неверный секрет вебхука!")
-    return secret
-
-
 async def process_successful_payment(
     event_json: Dict[str, Any],
-    payment_repo: PaymentRepository,
+    payment_repo: PaymentRepository, 
     get_user_id: GetUserSchemaById,
     merge_user: MergeUser,
     merge_payment: MergePayment,
@@ -52,8 +56,8 @@ async def process_successful_payment(
             logger.error(f"PaymentLog not found for {purchase_id}")
             return
 
-        # если уже processed, skip
-        if payment_log.status == 'succeeded':
+        #если уже processed, skip
+        if payment_log.status == 'succeeded': 
             logger.info(f"Payment {purchase_id} already succeeded")
             return
 
@@ -67,11 +71,11 @@ async def process_successful_payment(
             user.subscription_start = now
             user.subscription_date_end = date_end
             user.messages_used = 0
-            user.daily_messages_used = 0
+            user.daily_messages_used = 0 
             await merge_user(user)  # Merge для сохранения
 
         payment_log.status = 'succeeded'
-        await merge_payment(payment_log)
+        await merge_payment(payment_log) 
 
 
         await bot.send_message(
@@ -82,8 +86,6 @@ async def process_successful_payment(
 
     except Exception as e:
         logger.error(f"Error processing payment {purchase_id}: {e}")
-        # Здесь можно добавить retry или лог в DLQ, но для простоты - log
-
 
 @webhooks_router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
 async def handle_yookassa_webhook(
@@ -111,12 +113,14 @@ async def handle_yookassa_webhook(
 
     return {"status": "ok"}
 
+webhook_security = OnlyTelegramNetworkWithSecret(
+    real_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET")
+)
 
-@webhooks_router.post("/telegram/{secret}", include_in_schema=False)
-async def telegram_webhook(
-        request: Request,
-        secret: str = Depends(check_secret)
-):
+
+# @webhooks_router.post("/telegram/{secret}", dependencies=[Depends(webhook_security)])
+@webhooks_router.post("/telegram")
+async def telegram_webhook(request: Request):
     try:
         # Get container from app state
         container = request.app.state.dishka_container

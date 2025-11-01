@@ -4,7 +4,6 @@ from uuid import UUID
 
 from sqlalchemy import String, DateTime, ForeignKey, Integer, UUID as PG_UUID
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from source.core.enum import SubscriptionType, UserType
@@ -75,75 +74,26 @@ class User(BaseModel):
         return UserSchema
 
 
-class UserLog(BaseModel, TimestampCreatedAtMixin):
-    """Таблица с прошлыми диалогами"""
-    __tablename__ = "user_logs"
+class UserDialogsLogging(BaseModel, TimestampCreatedAtMixin):
+    __tablename__ = "users_dialogs_logging"
+
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id"),
         nullable=False,
-        comment="ID пользователя"
+        comment="ID пользователя из таблицы users"
     )
-
     user: Mapped["User"] = relationship(
         "User",
         back_populates="logging_requests",
         lazy="selectin"
     )
 
-    dialog_id: Mapped[PG_UUID] = mapped_column(
-        PG_UUID,
-        comment="ID диалога"
-    )
-
+    dialogue_id: Mapped[UUID] = mapped_column(postgresql.UUID(as_uuid=True), nullable=False, comment="ID сессии диалога")
+    role: Mapped[str] = mapped_column(String, nullable=False, comment="Роль отправителя (user или assistant)")
     message_text: Mapped[str] = mapped_column(
         String,
         comment="Текст сообщения"
-    )
-
-    @property
-    def schema_class(cls) -> Type[S]:
-        return UserLogSchema
-
-
-class UserMood(BaseModel, TimestampCreatedAtMixin):
-    """Таблица с настроением юзера"""
-    __tablename__ = "user_mood"
-
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False,
-        comment="ID пользователя, совершившего запрос"
-    )
-
-    user: Mapped["User"] = relationship(
-        "User",
-        back_populates="user_moods",
-        lazy="selectin"
-    )
-
-    mood: Mapped[int] = mapped_column(Integer, comment="Настроение юзера от 0 до 10")
-
-    @property
-    def schema_class(cls) -> Type[S]:
-        return UserMoodSchema
-
-
-class UserCharacteristic(BaseModel, TimestampCreatedAtMixin, TimestampUpdatedAtMixin):
-    """
-    Таблица с характеристикой юзера.
-
-    Отношения:
-    — User (by users.id)
-    — UserMood (by user_mood.id)
-    """
-
-    __tablename__ = "user_characteristic"
-
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False,
-        comment="ID пользователя, совершившего запрос"
     )
 
     user: Mapped["User"] = relationship(
