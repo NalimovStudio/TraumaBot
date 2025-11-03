@@ -1,4 +1,3 @@
-# app.py (главный ASGI файл)
 import asyncio
 import logging
 import os
@@ -8,7 +7,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramRetryAfter
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
-from fastapi_security_telegram_webhook import OnlyTelegramNetworkWithSecret
 
 from source.core.logging.logging_config import configure_logging
 from source.infrastructure.dishka import make_dishka_container
@@ -41,6 +39,17 @@ async def lifespan(app: FastAPI):
                 logger.error(f"❌ Failed to set webhook: {e}")
                 return False
 
+    async def delete_webhook(bot: Bot):
+        """Удаляет вебхук при завершении работы"""
+        try:
+            await bot.delete_webhook(drop_pending_updates=True)
+            logger.info("✅ Old webhook deleted, pending updates dropped")
+
+            await asyncio.sleep(2)
+
+        except Exception as e:
+            logger.error(f"❌ Failed to delete webhook: {e}")
+
     try:
         logger.info("🔄 Starting Dishka container...")
 
@@ -48,19 +57,18 @@ async def lifespan(app: FastAPI):
         bot: Bot = await dishka_container.get(Bot)
         dp: Dispatcher = await dishka_container.get(Dispatcher)
 
-        # install webhook secret
+        # Удаляем вебхук перед запуском
+        await delete_webhook(bot)
+
         secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
         if not secret:
             raise ValueError("TELEGRAM_WEBHOOK_SECRET is not set in environment variables")
 
-        # TODO
-        # webhook_url = f"https://траума.рф/v1/webhooks/telegram/{secret}"
-        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL")
+        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL") + f"/{secret}"
 
         success = await set_webhook_with_retry(bot, webhook_url)
         if not success:
             raise RuntimeError("Failed to set Telegram webhook")
-
         logger.info("✅ Application startup complete")
         yield
 
@@ -76,13 +84,16 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Factory для создания FastAPI приложения"""
 
+    # для прода — отключить
+    docs_enabled: bool = os.getenv("DOCS_ENABLE", "False") == "True"
+
     app = FastAPI(
         title="TraumaBot API",
         description="API for TraumaBot Telegram bot and fastapi",
         version="1.0.0",
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc"
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None
     )
 
     # Настраиваем Dishka
@@ -113,7 +124,7 @@ if __name__ == "__main__":
     logger.info(f"🚀 Starting TraumaBot API on {host}:{port}")
 
     uvicorn.run(
-        "app:app",
+        "asgi:app",
         host=host,
         port=port,
         reload=reload,

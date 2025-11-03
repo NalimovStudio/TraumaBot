@@ -29,13 +29,17 @@ def get_url_from_env() -> str:
             return default
         return value
 
-    # Get environment variables
-    db_user = get_env_var('DB_USER', 'admin')
-    db_password = get_env_var('DB_PASSWORD', '')
-    db_host = get_env_var('DB_HOST', 'db')
-    db_port = get_env_var('DB_PORT', '5432')
-    db_name = get_env_var('DB_NAME', 'psychoAI_db')
+    def get_vars():
+        """set prefix if staging"""
+        db_user = get_env_var(key='DB_USER', default='admin')
+        db_password = get_env_var(key='DB_PASSWORD', default='admin')
+        db_host = get_env_var(key='DB_HOST', default='')
+        db_port = get_env_var(key='DB_PORT', default='5432')
+        db_name = get_env_var(key='DB_NAME', default='psychoAI_db')
+        return db_user, db_password, db_host, db_port, db_name
 
+    # Get environment variables
+    db_user, db_password, db_host, db_port, db_name = get_vars()
     return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
@@ -45,8 +49,8 @@ config.set_main_option("sqlalchemy.url", DATABASE_URL + "?async_fallback=True")
 print(DATABASE_URL)
 
 from source.infrastructure.database.models.base_model import BaseModel
-from source.infrastructure.database.models.user_model import User  # обязательный импорт
-from source.infrastructure.database.models.payment_model import PaymentLogs  # обязательный импорт
+from source.infrastructure.database.models.user_model import User  # noqa
+from source.infrastructure.database.models.payment_model import PaymentLogs  # noqa
 
 
 target_metadata = BaseModel.metadata

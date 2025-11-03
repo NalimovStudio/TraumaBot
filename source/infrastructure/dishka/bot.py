@@ -8,6 +8,7 @@ from dishka.integrations.aiogram import setup_dishka
 from source.infrastructure.config import BotConfig
 from source.presentation.telegram.handlers import handlers_router
 from source.presentation.telegram.middlewares import LoadUserMiddleware, LimitCheckMiddleware
+from source.presentation.telegram.middlewares.load_user_mood import LoadUserMood
 
 
 class BotProvider(Provider):
@@ -35,7 +36,15 @@ class DispatcherProvider(Provider):
     ) -> Dispatcher:
         dp = Dispatcher(storage=storage, events_isolation=event_isolation)
         dp.include_router(handlers_router)
+
+        # [ middlewares ]
         dp.update.middleware(LoadUserMiddleware())
+
+        # mood
+        dp.message.middleware(LoadUserMood())  # Для сообщений
+        dp.callback_query.middleware(LoadUserMood())  # Для callback_query
+
         dp.message.middleware(LimitCheckMiddleware())
+
         setup_dishka(dishka, dp, auto_inject=True)
         return dp

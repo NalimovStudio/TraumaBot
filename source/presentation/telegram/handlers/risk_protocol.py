@@ -6,7 +6,7 @@ from aiogram.types import Message
 
 from source.presentation.telegram.keyboards.keyboards import get_calming_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
-from .support_methods.calming import CALMING_EXERCISE_TEXT
+from source.core.lexicon.message_templates import CALMING_EXERCISE_TEXT
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
