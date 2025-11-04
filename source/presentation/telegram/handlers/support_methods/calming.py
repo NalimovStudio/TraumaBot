@@ -1,32 +1,45 @@
 import logging
+import uuid
 
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from dishka import AsyncContainer
+from dishka.integrations.aiogram import inject, FromDishka
 
 from source.application.ai_assistant.ai_assistant_service import AssistantService
-from source.application.message_history.message_history_service import MessageHistoryService
-from source.core.lexicon.bot import CALMING_EXERCISE_TEXT
+from source.application.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.subscription.subscription_service import SubscriptionService
+from source.application.user import GetUserSchemaById
+from source.application.user.user_logs import CreateUserLog
+from source.core.lexicon.message_templates import CALMING_EXERCISE_TEXT
+from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, CalmingCallback
-from source.presentation.telegram.keyboards.keyboards import get_calming_keyboard, get_main_keyboard, get_back_to_menu_keyboard
+from source.presentation.telegram.keyboards.keyboards import get_calming_keyboard, get_main_keyboard, \
+    get_back_to_menu_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
 from source.presentation.telegram.utils import send_long_message, convert_markdown_to_html
-from source.application.subscription.subscription_service import SubscriptionService 
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
+
 @router.callback_query(MethodCallback.filter(F.name == "calm"), SupportStates.METHOD_SELECT)
 async def handle_calm_down_method(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} chose 'calm' method.")
+    dialogue_id = uuid.uuid4()
+    await state.update_data(dialogue_id=dialogue_id)
     await state.set_state(SupportStates.CALMING)
     await query.message.edit_text(CALMING_EXERCISE_TEXT, reply_markup=get_calming_keyboard())
     await query.answer()
 
+
 @router.callback_query(CalmingCallback.filter(), SupportStates.CALMING)
-async def handle_calming_feedback(query: CallbackQuery, callback_data: CalmingCallback, state: FSMContext):
+async def handle_calming_feedback(
+        query: CallbackQuery,
+        callback_data: CalmingCallback,
+        state: FSMContext,
+):
     action = callback_data.action
     logger.info(f"User {query.from_user.id} chose '{action}' in calming flow.")
 
@@ -36,46 +49,82 @@ async def handle_calming_feedback(query: CallbackQuery, callback_data: CalmingCa
 
     elif action == "feel_better":
         await state.clear()
-        await query.message.edit_text("Я рад, что тебе стало немного легче. Помни, что ты можешь вернуться к этому упражнению в любой момент.", reply_markup=None)
-        await query.message.answer("Ты можешь выбрать другой метод или начать новый диалог.", reply_markup=get_main_keyboard())
+        await query.message.edit_text(
+            "Я рад, что тебе стало немного легче. Помни, что ты можешь вернуться к этому упражнению в любой момент.",
+            reply_markup=None)
+        await query.message.answer("Ты можешь выбрать другой метод или начать новый диалог.",
+                                   reply_markup=get_main_keyboard())
         await query.answer()
 
     elif action == "to_talk":
         await state.set_state(SupportStates.CALMING_TALK)
-        await query.message.answer("Конечно, я здесь, чтобы выслушать. Расскажи, что у тебя на уме. Когда захочешь закончить, просто нажми на кнопку ниже.", reply_markup=get_back_to_menu_keyboard())
+        await query.message.answer(
+            "Конечно, я здесь, чтобы выслушать. Расскажи, что у тебя на уме. Когда захочешь закончить, просто нажми на кнопку ниже.",
+            reply_markup=get_back_to_menu_keyboard())
         await query.answer()
 
-@router.message(SupportStates.CALMING_TALK)
-async def handle_calming_talk(message: Message, state: FSMContext, bot: Bot, **data):
-    container: AsyncContainer = data["dishka_container"]
-    assistant: AssistantService = await container.get(AssistantService)
-    history: MessageHistoryService = await container.get(MessageHistoryService)
-    subscription_service: SubscriptionService = await container.get(SubscriptionService)
 
-    user_id = message.from_user.id
+@router.message(SupportStates.CALMING_TALK)
+@inject
+async def handle_calming_talk(
+        message: Message,
+        state: FSMContext,
+        bot: FromDishka[Bot],
+        create_user_log: FromDishka[CreateUserLog],
+        assistant_service: FromDishka[AssistantService],
+        message_history_service: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
+        get_user_schema_interactor: FromDishka[GetUserSchemaById],
+):
+    user_telegram_id = str(message.from_user.id)
+    user: UserSchema = await get_user_schema_interactor(telegram_id=user_telegram_id)
+    state_data = await state.get_data()
+    dialogue_id = state_data["dialogue_id"]
     context_scope = "calming"
 
     if message.text == "Вернуться в меню":
         await state.clear()
-        await history.clear_history(user_id, context_scope)
+        await message_history_service.clear_history(user_telegram_id, context_scope)
         await message.answer("Хорошо, возвращаю тебя в главное меню.", reply_markup=get_main_keyboard())
         return
 
-    user_message_context = ContextMessage(role="user", message=message.text)
-    await history.add_message_to_history(user_id, context_scope, user_message_context)
-    message_history = await history.get_history(user_id, context_scope)
+    # [ сохраняем лог сообщения пользователя в БД]
+    await create_user_log(
+        user_log=UserLogCreateSchema(
+            dialog_id=dialogue_id,
+            message_text=message.text,
+            user_id=user.id
+        )
+    )
+    logger.info(f"User log created: dialog_id = {dialogue_id}")
+
+    await message_history_service.add_message_to_history(
+        user_telegram_id, context_scope, ContextMessage(role="user", message=message.text)
+    )
+    message_history = await message_history_service.get_history(user_telegram_id, context_scope)
 
     try:
-        response = await assistant.get_calm_response(message=message.text, context_messages=message_history)
+        response = await assistant_service.get_calm_response(
+            message=message.text,
+            context_messages=message_history
+        )
         ai_response_text = response.message
 
-        ai_message_context = ContextMessage(role="assistant", message=ai_response_text)
-        await history.add_message_to_history(user_id, context_scope, ai_message_context)
+        await message_history_service.add_message_to_history(
+            user_telegram_id, context_scope, ContextMessage(role="assistant", message=ai_response_text)
+        )
 
-        await send_long_message(message, convert_markdown_to_html(ai_response_text), bot, keyboard=get_back_to_menu_keyboard())
-        telegram_id = str(user_id)
-        await subscription_service.increment_message_count(telegram_id)
+        await send_long_message(
+            message,
+            convert_markdown_to_html(ai_response_text),
+            bot,
+            keyboard=get_back_to_menu_keyboard()
+        )
+        await subscription_service.increment_message_count(user_telegram_id)
 
     except Exception as e:
-        logger.error(f"Failed to get AI response for user {user_id} in scope {context_scope}: {e}")
-        await message.answer("Произошла ошибка. Пожалуйста, попробуй еще раз. Если проблема повторится, ты можешь вернуться в меню.", reply_markup=get_back_to_menu_keyboard())
+        logger.error(f"Failed to get AI response for user {user_telegram_id} in scope {context_scope}: {e}")
+        await message.answer(
+            "Произошла ошибка. Пожалуйста, попробуй еще раз. Если проблема повторится, ты можешь вернуться в меню.",
+            reply_markup=get_back_to_menu_keyboard()
+        )

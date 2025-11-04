@@ -1,6 +1,5 @@
-from .webhooks_router import handle_yookassa_webhook, telegram_webhook
+from .webhooks_router import handle_yookassa_webhook
 
 __all__=[
-    'handle_yookassa_webhook',
-    'telegram_webhook'
+    'handle_yookassa_webhook'
 ]

@@ -1,6 +1,5 @@
 
 from dishka import Provider, provide, Scope
-from typing import AsyncIterable
 
 from source.infrastructure.database.repository import UserRepository, PaymentRepository
 

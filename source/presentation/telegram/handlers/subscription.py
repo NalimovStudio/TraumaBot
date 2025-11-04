@@ -13,11 +13,7 @@ from dishka import AsyncContainer
 
 from source.application.payment.payment_service import PaymentService
 from source.core.enum import SubscriptionType
-from source.core.lexicon.bot import (
-    SUBSCRIPTION_MENU_TEXT,
-    STANDARD_SUB_DETAIL_TEXT,
-    PRO_SUB_DETAIL_TEXT,
-)
+from source.core.lexicon.message_templates import SUBSCRIPTION_MENU_TEXT, STANDARD_SUBSCRIPTION_DETAIL_TEXT, PRO_SUBSCRIPTION_DETAIL_TEXT
 from source.core.schemas.user_schema import UserSchema
 from source.presentation.telegram.callbacks.method_callbacks import SubscriptionCallback
 from source.presentation.telegram.keyboards.keyboards import (
@@ -43,7 +39,7 @@ async def handle_back_to_main_menu(query: CallbackQuery):
 @router.callback_query(SubscriptionCallback.filter(F.menu == "standard"))
 async def handle_standard_sub_menu(query: CallbackQuery):
     await query.message.edit_text(
-        text=STANDARD_SUB_DETAIL_TEXT,
+        text=STANDARD_SUBSCRIPTION_DETAIL_TEXT,
         reply_markup=get_standard_subscription_options_keyboard(),
     )
     await query.answer()
@@ -52,7 +48,7 @@ async def handle_standard_sub_menu(query: CallbackQuery):
 @router.callback_query(SubscriptionCallback.filter(F.menu == "pro"))
 async def handle_pro_sub_menu(query: CallbackQuery):
     await query.message.edit_text(
-        text=PRO_SUB_DETAIL_TEXT,
+        text=PRO_SUBSCRIPTION_DETAIL_TEXT,
         reply_markup=get_pro_subscription_options_keyboard(),
     )
     await query.answer()

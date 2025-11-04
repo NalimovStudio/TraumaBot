@@ -1,6 +1,7 @@
 from aiogram import Router
 
-from .check_in import router as check_in_router
+from .profile import router as profile_router
+from .check_mood import router as check_in_router
 from .main_menu import router as main_menu_router
 from .risk_protocol import router as risk_protocol_router
 from .start import router as start_router
@@ -20,15 +21,13 @@ handlers_router = Router(name="main_handlers_router")
 # командам или колбэкам, поэтому конфликтов быть не должно.
 # Группируем для логической читаемости.
 handlers_router.include_routers(
-    # Команды (самый высокий приоритет)
+    # [ приоритет ]
     start_router,
-    # Навигация по главному меню (Reply-кнопки)
-    main_menu_router,
-    # Обработка колбэков подписки
-    subscription_router,
-    # Начальный диалог
-    check_in_router,
-    # Потоки поддержки
+    profile_router,  # профиль юзера
+    check_in_router,  # запись настроения
+    main_menu_router,  # Навигация по главному меню (Reply-кнопки)
+    subscription_router,  # Обработка меню подписки
+    # [ Потоки поддержки ]
     calming_router,
     cbt_router,
     problem_solving_router,

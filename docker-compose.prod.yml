@@ -49,29 +49,28 @@ services:
       context: .
       dockerfile: Dockerfile
       network: host
-    image: trauma_image:latest
     container_name: fastapi
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.psychoai-web.rule=Host(`xn--80aa9aoji.xn--p1ai`)"
+      - "traefik.http.routers.psychoai-web.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.psychoai-web.entrypoints=websecure"
       - "traefik.http.routers.psychoai-web.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.psychoai-web.tls.domains[0].main=xn--80aa9aoji.xn--p1ai"
+      - "traefik.http.routers.psychoai-web.tls.domains[0].main=${DOMAIN}"
       - "traefik.http.services.psychoai-web.loadbalancer.server.port=8000"
       # Редирект с HTTP на HTTPS
-      - "traefik.http.routers.psychoai-web-http.rule=Host(`xn--80aa9aoji.xn--p1ai`) && !PathPrefix(`/.well-known/acme-challenge/`)"
+      - "traefik.http.routers.psychoai-web-http.rule=Host(`${DOMAIN}`) && !PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.psychoai-web-http.entrypoints=web"
       - "traefik.http.routers.psychoai-web-http.middlewares=redirect-to-https"
       # Middleware для редиректа
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       # ACME
-      - "traefik.http.routers.acme.rule=Host(`xn--80aa9aoji.xn--p1ai`) && PathPrefix(`/.well-known/acme-challenge/`)"
+      - "traefik.http.routers.acme.rule=Host(`${DOMAIN}`) && PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.acme.entrypoints=web"
       - "traefik.http.routers.acme.priority=1000"
       # docker network
-      - "traefik.docker.network=traumabot_traefik_network"
+      - "traefik.docker.network=traefik_network"
     env_file:
       - .env
     depends_on:
@@ -99,7 +98,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.traefik
-    image: traefik:v2.9
+    image: traefik:v2.11
     container_name: traefik
     restart: unless-stopped
     command:
@@ -108,7 +107,7 @@ services:
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.letsencrypt.acme.email=d.vilkinsov@yandex.ru
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
