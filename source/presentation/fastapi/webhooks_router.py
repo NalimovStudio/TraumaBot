@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Any
 
 from aiogram import Bot, Dispatcher
@@ -8,11 +8,11 @@ from aiogram.types import Update
 from dateutil.relativedelta import relativedelta
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, status, Request, HTTPException, BackgroundTasks, Depends, Path
-from source.application.payment.merge import MergePayment
 
+from source.application.payment.merge import MergePayment
 from source.application.user import MergeUser, GetUserSchemaById
+from source.core.schemas.payment_schema import PaymentSchema
 from source.core.schemas.user_schema import UserSchema
-from source.infrastructure.database.models.payment_model import PaymentLogs
 from source.infrastructure.database.repository import PaymentRepository
 
 logger = logging.getLogger(__name__)
@@ -29,25 +29,24 @@ def check_secret(secret: str = Path(..., include_in_schema=False)):
 
 
 async def process_successful_payment(
-    event_json: Dict[str, Any],
-    payment_repo: PaymentRepository,
-    get_user_id: GetUserSchemaById,
-    merge_user: MergeUser,
-    merge_payment: MergePayment,
-    bot: Bot
+        event_json: Dict[str, Any],
+        payment_repo: PaymentRepository,
+        get_user_id: GetUserSchemaById,
+        merge_user: MergeUser,
+        merge_payment: MergePayment,
+        bot: Bot
 ):
     """Асинхронная обработка успешной оплаты (в background)."""
+    payment_object = event_json.get('object', {})
+    purchase_id = payment_object.get('id')  # ID платежа от Yookassa
+    status = payment_object.get('status')
     try:
-        payment_object = event_json.get('object', {})
-        purchase_id = payment_object.get('id')  # ID платежа от Yookassa
-        status = payment_object.get('status')
-
         if status != 'succeeded':
             logger.info(f"Payment {purchase_id} not succeeded: {status}")
             return
 
         # Найти PaymentLog по purchase_id
-        payment_log: PaymentLogs = await payment_repo.get_model_by_purchase_id(purchase_id)
+        payment_log: PaymentSchema = await payment_repo.get_by_purchase_id(purchase_id)
         if not payment_log:
             logger.error(f"PaymentLog not found for {purchase_id}")
             return
@@ -58,7 +57,7 @@ async def process_successful_payment(
             return
 
         telegram_id = payment_log.telegram_id
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         date_end = now + relativedelta(months=payment_log.month_sub)
 
         user: UserSchema = await get_user_id(telegram_id)  # Получить User
@@ -73,7 +72,6 @@ async def process_successful_payment(
         payment_log.status = 'succeeded'
         await merge_payment(payment_log)
 
-
         await bot.send_message(
             chat_id=int(telegram_id),
             text="Ваша подписка успешно оформлена!"
@@ -87,13 +85,13 @@ async def process_successful_payment(
 
 @webhooks_router.post("/yookassa_webhook", status_code=status.HTTP_200_OK)
 async def handle_yookassa_webhook(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    payment_repo: FromDishka[PaymentRepository],
-    get_by_id: FromDishka[GetUserSchemaById],
-    merge_payment: FromDishka[MergePayment],
-    merge_user: FromDishka[MergeUser],
-    bot: FromDishka[Bot]
+        request: Request,
+        background_tasks: BackgroundTasks,
+        payment_repo: FromDishka[PaymentRepository],
+        get_by_id: FromDishka[GetUserSchemaById],
+        merge_payment: FromDishka[MergePayment],
+        merge_user: FromDishka[MergeUser],
+        bot: FromDishka[Bot]
 ):
     event_json = await request.json()
     logger.info("Webhook received!")
@@ -104,8 +102,8 @@ async def handle_yookassa_webhook(
         event_json,
         payment_repo,
         get_by_id,
-        merge_payment,
         merge_user,
+        merge_payment,
         bot
     )
 

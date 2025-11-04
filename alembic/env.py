@@ -50,7 +50,7 @@ print(DATABASE_URL)
 
 from source.infrastructure.database.models.base_model import BaseModel
 from source.infrastructure.database.models.user_model import User  # noqa
-from source.infrastructure.database.models.payment_model import PaymentLogs  # noqa
+from source.infrastructure.database.models.payment_model import Payment  # noqa
 
 
 target_metadata = BaseModel.metadata

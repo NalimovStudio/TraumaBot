@@ -1,18 +1,17 @@
 from datetime import datetime
-from typing import Optional, Type
+from typing import Type
 
-from sqlalchemy import String, DateTime, ForeignKey, Integer
+from sqlalchemy import String, DateTime, Integer
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.dialects.postgresql import ARRAY, VARCHAR
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from source.core.enum import SubscriptionType
 from source.core.schemas.payment_schema import PaymentSchema
-from source.infrastructure.database.models.base_model import BaseModel, TimestampCreatedAtMixin, S
+from source.infrastructure.database.models.base_model import BaseModel, S
 
 
-class PaymentLogs(BaseModel):
-    __tablename__="paymentlogs"
+class Payment(BaseModel):
+    __tablename__ = "paymentlogs"
 
     purchase_id: Mapped[str] = mapped_column(String, comment="ID Заказа", unique=True)
 
@@ -32,7 +31,6 @@ class PaymentLogs(BaseModel):
     link: Mapped[str] = mapped_column(String, comment="Ссылка для оплаты заказа")
 
     timestamp: Mapped[datetime] = mapped_column(DateTime, comment="Время покупки")
-
 
     @property
     def schema_class(cls) -> Type[S]:
