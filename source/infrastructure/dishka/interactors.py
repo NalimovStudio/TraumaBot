@@ -10,6 +10,7 @@ from source.application.user.user_characteristic import GetUserCharacteristics, 
     MayGenerateCharacteristic
 from source.application.user.user_logs import CreateUserLog, GetAllUserLogs, GetLastUserLogs
 from source.application.user.user_mood import IsMoodSetToday, GetUserMoods, SetMood
+from source.application.payment.merge import MergePayment
 from source.core.lexicon.rules import HISTORY_MAX_LEN
 
 
@@ -19,6 +20,9 @@ class InteractorsProvider(Provider):
     assistant_service = provide(AssistantService)
     payment_service = provide(PaymentService)
     subscription_service = provide(SubscriptionService)
+
+    # [ payment ]
+    merge_payment = provide(MergePayment)
     
     # [ user ]
     create_user = provide(CreateUser)
