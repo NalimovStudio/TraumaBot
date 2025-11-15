@@ -73,12 +73,12 @@ class AssistantService(AssistantServiceInterface):
             temperature=temperature
         )
 
-    async def get_speak_out_response(
+    async def get_speaking_response(
             self,
             message: str,
             prompt: str = SPEAKING_PROMPT,
             context_messages=None,
-            temperature=0.75
+            temperature=0.7
     ) -> AssistantResponse:
         if context_messages is None:
             context_messages = []

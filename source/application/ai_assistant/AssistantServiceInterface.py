@@ -39,7 +39,7 @@ class AssistantServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_speak_out_response(
+    async def get_speaking_response(
             self,
             message: str,
             context_messages: list[ContextMessage],

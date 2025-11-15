@@ -111,7 +111,7 @@ async def handle_venting_message(
         )
         # TODO: utils.get_waiting_message(support_method: SUPPORT_METHODS) + lexicon
 
-        response = await assistant_service.get_speak_out_response(
+        response = await assistant_service.get_speaking_response(
             message=message.text,
             context_messages=message_history
         )
