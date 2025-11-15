@@ -44,7 +44,7 @@ class ButtonText:
     RIGHT_ARROW = "——>"
 
     # Inline Keyboard - Methods
-    CALM_DOWN = "Успокоиться"
+    SPEAKING = "Поговорить"
     # TODO: Раскоментировать данный блок что бы вернуть Дневник эмоций
     # CBT_DIARY = "КПТ (Дневник эмоций)"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
