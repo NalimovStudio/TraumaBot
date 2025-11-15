@@ -38,7 +38,7 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     await state.set_state(SupportStates.SPEAKING)
 
     text = VENTING_START
-    photo_logo = get_file_by_name("высказаться.jpg")
+    photo_logo = get_file_by_name("поговорить.jpeg")
 
     await query.message.delete()
 

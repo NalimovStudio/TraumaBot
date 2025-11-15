@@ -44,11 +44,11 @@ class ButtonText:
     RIGHT_ARROW = "——>"
 
     # Inline Keyboard - Methods
-    SPEAKING = "Поговорить"
     # TODO: Раскоментировать данный блок что бы вернуть Дневник эмоций
     # CBT_DIARY = "КПТ (Дневник эмоций)"
+    # CALMING = "Успокоиться"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
-    VENT_OUT = "Высказаться"
+    SPEAKING = "Поговорить"
     BLACKPILL_EXIT = "⚫ Выход из Блекпилл"
 
     # Inline Keyboard - Blackpill Exit

@@ -45,7 +45,7 @@ class AssistantServiceInterface(ABC):
             context_messages: list[ContextMessage],
             prompt: str = SPEAKING_PROMPT,
     ) -> AssistantResponse:
-        """Высказаться. Баланс между эмпатией и решением проблемы."""
+        """Поговорить. Баланс между эмпатией и решением проблемы."""
         pass
 
     @abstractmethod
