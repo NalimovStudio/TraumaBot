@@ -1,5 +1,5 @@
 from source.application.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
-from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAK_OUT_PROMPT, \
+from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAKING_PROMPT, \
     BLACKPILL_EXIT_PROMPT, GET_USER_CHARACTERISTIC
 from source.core.schemas import UserLogSchema
 from source.core.schemas.assistant_schemas import AssistantResponse, UserCharacteristicAssistantResponse
@@ -12,12 +12,12 @@ class AssistantService(AssistantServiceInterface):
     def __init__(self, client: AssistantClient):
         self.client = client
 
-    async def get_calm_response(
+    async def get_speaking_response(
             self,
             message: str,
             context_messages=None,
             prompt: str = GET_CALM_PROMPT,
-            temperature=0.3
+            temperature=0.75
     ) -> AssistantResponse:
         if context_messages is None:
             context_messages = []
@@ -76,9 +76,9 @@ class AssistantService(AssistantServiceInterface):
     async def get_speak_out_response(
             self,
             message: str,
-            prompt: str = SPEAK_OUT_PROMPT,
+            prompt: str = SPEAKING_PROMPT,
             context_messages=None,
-            temperature=0.3
+            temperature=0.75
     ) -> AssistantResponse:
         if context_messages is None:
             context_messages = []

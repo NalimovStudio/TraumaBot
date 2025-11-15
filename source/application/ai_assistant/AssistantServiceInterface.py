@@ -8,7 +8,7 @@ from source.infrastructure.database.models.base_model import S
 
 class AssistantServiceInterface(ABC):
     @abstractmethod
-    async def get_calm_response(
+    async def get_speaking_response(
             self,
             message: str,
             context_messages: list[ContextMessage],
@@ -43,7 +43,7 @@ class AssistantServiceInterface(ABC):
             self,
             message: str,
             context_messages: list[ContextMessage],
-            prompt: str = SPEAK_OUT_PROMPT,
+            prompt: str = SPEAKING_PROMPT,
     ) -> AssistantResponse:
         """Высказаться. Баланс между эмпатией и решением проблемы."""
         pass
