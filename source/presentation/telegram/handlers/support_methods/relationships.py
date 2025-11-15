@@ -28,22 +28,22 @@ logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 
-@router.callback_query(MethodCallback.filter(F.name == "blackpill_exit"), SupportStates.METHOD_SELECT)
-async def handle_blackpill_method(
+@router.callback_query(MethodCallback.filter(F.name == "relationships"), SupportStates.METHOD_SELECT)
+async def handle_relationships_method(
         callback_query: CallbackQuery,
         state: FSMContext
 ):
     """
-    Старт БП режима.
+    Старт режима Отношения.
     """
-    logger.info(f"User {callback_query.from_user.id} chose blackpill method")
+    logger.info(f"User {callback_query.from_user.id} chose relationships method")
 
     dialogue_id = uuid.uuid4()
     await state.update_data(dialogue_id=dialogue_id)
-    await state.set_state(SupportStates.BLACKPILL)
+    await state.set_state(SupportStates.RELATIONSHIPS)
 
-    text = message_templates.BLACKPILL_START
-    photo_logo = get_file_by_name("побегБП.jpg")
+    text = message_templates.RELATIONSHIPS_START
+    photo_logo = get_file_by_name("relationships.jpeg")
 
     await callback_query.message.delete()
 
@@ -54,8 +54,8 @@ async def handle_blackpill_method(
     await callback_query.answer()
 
 
-@router.message(Command("stop"), SupportStates.BLACKPILL)
-async def handle_stop_blackpill(
+@router.message(Command("stop"), SupportStates.RELATIONSHIPS)
+async def handle_stop_relationships(
         message: Message,
         state: FSMContext,
         **data,
@@ -76,9 +76,9 @@ async def handle_stop_blackpill(
     return
 
 
-@router.message(SupportStates.BLACKPILL)
+@router.message(SupportStates.RELATIONSHIPS)
 @inject
-async def handle_blackpill_talking(
+async def handle_relationships_talking(
         message: Message,
         state: FSMContext,
         bot: FromDishka[Bot],
@@ -121,11 +121,11 @@ async def handle_blackpill_talking(
     message_history = await message_history_service.get_history(user_telegram_id, context_scope)
 
     try:
-        message_waiting_response: Message = await message.answer(random.choice(message_templates.BLACKPILL_WAITING_RESPONSE))
+        message_waiting_response: Message = await message.answer(random.choice(message_templates.RELATIONSHIPS_WAITING_RESPONSE))
         # TODO: utils.get_waiting_message(support_method: SUPPORT_METHODS) + lexicon
 
-        response = await assistant_service.get_blackpill_exit_response(message=message.text,
-                                                                       context_messages=message_history)
+        response = await assistant_service.get_relationships_response(message=message.text,
+                                                                      context_messages=message_history)
         ai_response_text = response.message
 
         await message_waiting_response.delete()

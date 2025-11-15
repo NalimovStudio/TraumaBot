@@ -35,10 +35,10 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     logger.info(f"User {query.from_user.id} chose 'vent' method.")
     dialogue_id = uuid.uuid4()
     await state.update_data(dialogue_id=dialogue_id)
-    await state.set_state(SupportStates.VENTING)
+    await state.set_state(SupportStates.SPEAKING)
 
     text = VENTING_START
-    photo_logo = get_file_by_name("высказаться.jpg")
+    photo_logo = get_file_by_name("speaking.jpeg")
 
     await query.message.delete()
 
@@ -49,7 +49,7 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
     await query.answer()
 
 
-@router.message(Command("stop"), SupportStates.VENTING)
+@router.message(Command("stop"), SupportStates.SPEAKING)
 async def handle_stop_venting(
     message: Message,
     state: FSMContext,
@@ -60,7 +60,7 @@ async def handle_stop_venting(
 
     user_telegram_id = str(message.from_user.id)
     context_scope = "venting"
-    logger.info(f"Пользователь {user_telegram_id} Остановил сессию высказаться.")
+    logger.info(f"Пользователь {user_telegram_id} Остановил сессию Поговорить.")
 
     await state.clear()
     await history.clear_history(user_telegram_id, context_scope)
@@ -71,7 +71,7 @@ async def handle_stop_venting(
     )
 
 
-@router.message(SupportStates.VENTING)
+@router.message(SupportStates.SPEAKING)
 @inject
 async def handle_venting_message(
     message: Message,
@@ -107,11 +107,11 @@ async def handle_venting_message(
 
     try:
         message_waiting: Message = await message.answer(
-            random.choice(message_templates.VENTING_WAITING_RESPONSE)
+            random.choice(message_templates.SPEAKING_WAITING_RESPONSE)
         )
         # TODO: utils.get_waiting_message(support_method: SUPPORT_METHODS) + lexicon
 
-        response = await assistant_service.get_speak_out_response(
+        response = await assistant_service.get_speaking_response(
             message=message.text,
             context_messages=message_history
         )

@@ -104,7 +104,7 @@ async def handle_calming_talk(
     message_history = await message_history_service.get_history(user_telegram_id, context_scope)
 
     try:
-        response = await assistant_service.get_calm_response(
+        response = await assistant_service.get_speaking_response(
             message=message.text,
             context_messages=message_history
         )

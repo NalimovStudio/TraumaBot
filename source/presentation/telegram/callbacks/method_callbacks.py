@@ -2,7 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 
 
 class MethodCallback(CallbackData, prefix="method"):
-    name: str  # calm, cbt, problem, vent, blackpill_exit
+    name: str  # calm, cbt, problem, vent, relationships
 
 
 class CalmingCallback(CallbackData, prefix="calm"):

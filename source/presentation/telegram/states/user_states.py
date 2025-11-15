@@ -6,14 +6,15 @@ class SupportStates(StatesGroup):
     CHECK_IN = State()          # Ожидание ответа на первый вопрос "Как ты?"
     METHOD_SELECT = State()     # Ожидание выбора метода поддержки
 
-    # ПОТОК БЛЕКПИЛЛ
-    BLACKPILL = State()
-    BLACKPILL_TALK = State()
-
     # Потоки поддержки
+    # [ отключен ]
     CALMING = State()           # В процессе выполнения техники "Успокоиться"
     CALMING_TALK = State()      # В процессе разговора с ИИ после техники "Успокоиться"
-    VENTING = State()           # В процессе выполнения техники "Высказаться"
+
+    # [ работают ]
+    SPEAKING = State()           # В процессе выполнения техники "Поговорить"
+    RELATIONSHIPS = State()
+    BLACKPILL_TALK = State()
 
     # Поток КПТ (Когнитивно-поведенческая терапия)
     CBT_S1_SITUATION = State()          # Шаг 1: Описание ситуации

@@ -43,7 +43,7 @@ async def handle_problem_solving_method(
     await state.set_state(SupportStates.PROBLEM_S1_DEFINE)
 
     text = PROBLEM_SOLVING_START
-    photo_logo = get_file_by_name("решениепроблем.jpg")
+    photo_logo = get_file_by_name("problem_solver.jpeg")
 
     await query.message.delete()
 
@@ -275,7 +275,7 @@ async def handle_ps_s4_discussion(
         await message.answer(
             "Хорошо, думаю над ответом...\n\n💢Когда захочешь закончить со мной общаться, отправь команду /stop."
         )
-        response = await assistant_service.get_speak_out_response(
+        response = await assistant_service.get_speaking_response(
             message=message.text,
             context_messages=message_history
         )

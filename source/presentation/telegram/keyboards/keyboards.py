@@ -74,7 +74,7 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=ButtonText.BLACKPILL_EXIT,
-                    callback_data=MethodCallback(name="blackpill_exit").pack()
+                    callback_data=MethodCallback(name="relationships").pack()
                 )
             ],
             [
@@ -85,7 +85,7 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
-                    text=ButtonText.VENT_OUT,
+                    text=ButtonText.SPEAKING,
                     callback_data=MethodCallback(name="vent").pack(),
                 )
             ],

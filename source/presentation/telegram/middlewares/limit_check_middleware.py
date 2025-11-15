@@ -32,7 +32,7 @@ class LimitCheckMiddleware(BaseMiddleware):
         current_state = await state.get_state()
 
         limitable_states = [
-            SupportStates.VENTING.state,
+            SupportStates.SPEAKING.state,
             SupportStates.PROBLEM_S2_GOAL.state,
             SupportStates.CALMING_TALK.state,
             SupportStates.BLACKPILL_TALK.state
