@@ -31,7 +31,7 @@ async def handle_start_dialog_from_help(
     if not is_mood_was_set_today:
         await state.set_state(SupportStates.CHECK_IN)
 
-        text = "Как ты сегодня себя чувствуешь?\n\nОцени своё настроение от 1 до 10:"  # TODO in templates
+        text = "Как ты сегодня себя чувствуешь?\n\nОцени своё настроение от 0 до 10:"  # TODO in templates
         await callback_query.message.edit_text(
             text=text
         )
@@ -60,7 +60,7 @@ async def handle_start_dialog(
     if not is_mood_was_set_today:
         await state.set_state(SupportStates.CHECK_IN)
 
-        text = "Как ты сегодня себя чувствуешь?\n\nОцени своё настроение от 1 до 10:"
+        text = "Как ты сегодня себя чувствуешь?\n\nОцени своё настроение от 0 до 10:"
 
         await message.answer(
             text=text,
