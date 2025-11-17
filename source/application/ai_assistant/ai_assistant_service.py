@@ -12,7 +12,7 @@ class AssistantService(AssistantServiceInterface):
     def __init__(self, client: AssistantClient):
         self.client = client
 
-    async def get_speaking_response(
+    async def get_calm_response(
             self,
             message: str,
             context_messages=None,
@@ -94,7 +94,7 @@ class AssistantService(AssistantServiceInterface):
             message: str,
             prompt: str = RELATIONSHIPS_PROMPT,
             context_messages=None,
-            temperature=0.3
+            temperature=0.6
     ) -> AssistantResponse:
         """Возвращает ответ ассистента в режиме Отношения"""
         if context_messages is None:
