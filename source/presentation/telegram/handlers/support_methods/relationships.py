@@ -18,7 +18,7 @@ from source.core.lexicon import message_templates
 from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
 from source.materials.get_file import get_file_by_name
-from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, BlackpillCallback
+from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, \
     get_back_to_menu_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
@@ -67,8 +67,8 @@ async def handle_stop_relationships(
     history: MessageHistoryService = await container.get(MessageHistoryService)
 
     user_id = str(message.from_user.id)
-    context_scope = "blackpill_exit"
-    logger.info(f"Пользователь {user_id} Остановил сессию blackpill.")
+    context_scope = "relationships"
+    logger.info(f"Пользователь {user_id} Остановил сессию relationships.")
 
     await state.clear()
     await history.clear_history(user_id, context_scope)
@@ -97,7 +97,7 @@ async def handle_relationships_talking(
     user_telegram_id = str(message.from_user.id)
     user: UserSchema = await get_user_schema_interactor(telegram_id=user_telegram_id)  # TODO: get from redis
 
-    context_scope = "blackpill_exit"
+    context_scope = "relationships"
 
     if message.text == "Вернуться в меню":
         await state.clear()

@@ -13,10 +13,6 @@ class VentingCallback(CallbackData, prefix="vent"):
     action: str  # save, delete, to_cbt
 
 
-class BlackpillCallback(CallbackData, prefix="blackpill"):
-    action: str  # ...
-
-
 from typing import Optional
 
 

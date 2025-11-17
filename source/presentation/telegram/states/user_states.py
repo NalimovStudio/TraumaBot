@@ -14,7 +14,7 @@ class SupportStates(StatesGroup):
     # [ работают ]
     SPEAKING = State()           # В процессе выполнения техники "Поговорить"
     RELATIONSHIPS = State()
-    BLACKPILL_TALK = State()
+    RELATIONSHIPS_TALK = State()
 
     # Поток КПТ (Когнитивно-поведенческая терапия)
     CBT_S1_SITUATION = State()          # Шаг 1: Описание ситуации

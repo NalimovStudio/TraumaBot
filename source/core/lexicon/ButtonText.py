@@ -49,10 +49,7 @@ class ButtonText:
     # CALMING = "Успокоиться"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     SPEAKING = "Поговорить"
-    BLACKPILL_EXIT = "👫 Отношения"
-
-    # Inline Keyboard - Blackpill Exit
-    READY = "Готов"
+    RELATIONSHIPS = "👫 Отношения"
 
     # Inline Keyboard - Calming flow
     ANOTHER_CYCLE = "ещё 1 цикл"

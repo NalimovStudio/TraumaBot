@@ -1,8 +1,8 @@
 from aiogram import Router
 
-from .profile import router as profile_router
 from .check_mood import router as check_in_router
 from .main_menu import router as main_menu_router
+from .profile import router as profile_router
 from .risk_protocol import router as risk_protocol_router
 from .start import router as start_router
 from .subscription import router as subscription_router
@@ -11,7 +11,7 @@ from .support_methods import (
     cbt_router,
     problem_solving_router,
     venting_router,
-    blackpill_exit_router
+    relationships_router
 )
 
 handlers_router = Router(name="main_handlers_router")
@@ -32,7 +32,7 @@ handlers_router.include_routers(
     cbt_router,
     problem_solving_router,
     venting_router,
-    blackpill_exit_router,
+    relationships_router,
     # Протокол безопасности (срабатывает только в своем состоянии)
     risk_protocol_router,
 )

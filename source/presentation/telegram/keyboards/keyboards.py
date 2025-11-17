@@ -17,7 +17,7 @@ from source.presentation.telegram.callbacks.method_callbacks import (
     VentingCallback,
     SubscriptionCallback,
     ProblemSolvingCallback,
-    HelpCallback, BlackpillCallback,
+    HelpCallback
 )
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
             # ],
             [
                 InlineKeyboardButton(
-                    text=ButtonText.BLACKPILL_EXIT,
+                    text=ButtonText.RELATIONSHIPS,
                     callback_data=MethodCallback(name="relationships").pack()
                 )
             ],
@@ -118,19 +118,6 @@ def get_calming_keyboard() -> InlineKeyboardMarkup:
                     callback_data=CalmingCallback(action="to_talk").pack(),
                 )
             ],
-        ]
-    )
-
-
-def get_blackpill_exit_ready_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=ButtonText.READY,
-                    callback_data=BlackpillCallback(action="ready").pack()
-                )
-            ]
         ]
     )
 
