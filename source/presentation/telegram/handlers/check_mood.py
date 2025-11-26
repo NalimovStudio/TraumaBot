@@ -9,6 +9,7 @@ from dishka.integrations.aiogram import inject, FromDishka
 
 from source.application.user.user_mood import SetMood
 from source.core.lexicon.ButtonText import ButtonText
+from source.materials.get_file import get_file_by_name
 from source.presentation.telegram.callbacks.method_callbacks import HelpCallback
 from source.presentation.telegram.keyboards.keyboards import get_support_methods_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
@@ -127,14 +128,17 @@ async def _select_support_method(
     """выбор метода поддержки"""
     await state.set_state(SupportStates.METHOD_SELECT)
 
-    text = "Выбери любой доступный тебе метод поддержки снизу:"
+    text = "➡️ Выбери режим диалога используя кнопки ниже:"
     if is_mood_was_set:
         text = "Спасибо, что поделился.\n\n" + text
 
+    photo_support_methods = get_file_by_name("support_methods.jpeg")
+
     if is_callback:
-        await message.edit_text(
-            text=text,
-            reply_markup=get_support_methods_keyboard()
-        )
-    else:
-        await message.answer(text=text, reply_markup=get_support_methods_keyboard())
+        await message.delete()
+
+    await message.answer_photo(
+        caption=text,
+        reply_markup=get_support_methods_keyboard(),
+        photo=photo_support_methods
+    )
