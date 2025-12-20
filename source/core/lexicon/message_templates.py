@@ -7,7 +7,7 @@ PROFILE_TEXT = (
 
 PROFILE_CHARACTERISTIC_TEXT = (
     "<b>👤 Твоя характеристика с момента:</b>\n"
-    "└─ Дата: <u>{characteristic_when_created}</u>\n"
+    "└─ <u>{characteristic_when_created}</u>\n"
     "└─ {passed_russian_word}: {days_pass}\n\n"
 
     "🎭 <b>Эмоциональный фон:</b>\n"

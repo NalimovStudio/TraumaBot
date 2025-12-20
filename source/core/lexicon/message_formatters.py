@@ -25,11 +25,11 @@ def format_days_russian(days):
 # Функция для склонения слова "прошло"
 def format_passed_russian(days) -> str:
     if days % 10 == 1 and days % 100 != 11:
-        return f"прошёл {days} день"
+        return f"прошёл"
     elif 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20):
-        return f"прошло {days} дня"
+        return f"прошло"
     else:
-        return f"прошло {days} дней"
+        return f"прошло"
 
 
 def format_profile_characteristic(characteristic: UserCharacteristicSchema) -> str:
