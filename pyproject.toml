@@ -11,7 +11,7 @@ dependencies = [
     "pydantic (==2.11.7)",
     "environs (>=14.3.0,<15.0.0)",
     "dishka (>=1.6.0,<2.0.0)",
-    "aiogram (>=3.21.0,<4.0.0)",
+    "aiogram (==3.25.0)",
     "sqlalchemy (==2.0.43)",
     "redis (>=6.4.0,<7.0.0)",
     "coloredlogs (>=15.0.1,<16.0.0)",
@@ -64,6 +64,9 @@ packages = [
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.3.0"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.15"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

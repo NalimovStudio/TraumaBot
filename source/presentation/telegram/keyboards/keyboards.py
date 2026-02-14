@@ -26,10 +26,26 @@ logger = logging.getLogger(__name__)
 def get_main_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=ButtonText.START_DIALOG)],
-            [KeyboardButton(text=ButtonText.HELP)],
-            [KeyboardButton(text=ButtonText.SUBSCRIPTION)],
-            [KeyboardButton(text=ButtonText.PROFILE)],
+            [KeyboardButton(
+                text=ButtonText.START_DIALOG,
+                style='success',
+                icon_custom_emoji_id="5972302069770488984",
+            )],
+            [KeyboardButton(
+                text=ButtonText.HELP,
+                style='primary',
+                icon_custom_emoji_id="5852777287451151788",
+            )],
+            [KeyboardButton(
+                text=ButtonText.SUBSCRIPTION,
+                style='primary',
+                icon_custom_emoji_id="5852855309827051115",
+            )],
+            [KeyboardButton(
+                text=ButtonText.PROFILE,
+                style='primary',
+                icon_custom_emoji_id="5971867376130461576",
+            )],
         ],
         resize_keyboard=True,
     )
@@ -42,12 +58,16 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=ButtonText.HELP_START_DIALOG,
+                    style='success',
+                    icon_custom_emoji_id="5972302069770488984",
                     callback_data=HelpCallback(menu="start_dialog").pack(),
                 )
             ],
             [
                 InlineKeyboardButton(
                     text=ButtonText.HELP_SUPPORT_METHODS,
+                    style='primary',
+                    icon_custom_emoji_id="5852777287451151788",
                     callback_data=HelpCallback(menu="methods").pack(),
                 )
             ],
@@ -74,18 +94,24 @@ def get_support_methods_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=ButtonText.RELATIONSHIPS,
+                    style='danger',
+                    icon_custom_emoji_id="5316546110829906174",
                     callback_data=MethodCallback(name="relationships").pack()
                 )
             ],
             [
                 InlineKeyboardButton(
                     text=ButtonText.PROBLEM_SOLVING,
+                    style="success",
+                    icon_custom_emoji_id='5462921117423384478',
                     callback_data=MethodCallback(name="problem").pack(),
                 )
             ],
             [
                 InlineKeyboardButton(
                     text=ButtonText.SPEAKING,
+                    style='primary',
+                    icon_custom_emoji_id='5429413328768224565',
                     callback_data=MethodCallback(name="vent").pack(),
                 )
             ],
@@ -170,6 +196,7 @@ def get_subscriptions_menu_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=ButtonText.BUY_PRO,
+                    style="primary",
                     callback_data=SubscriptionCallback(menu="pro").pack(),
                 )
             ],
