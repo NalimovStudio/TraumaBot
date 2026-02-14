@@ -64,7 +64,8 @@ jobs:
     needs: test
     if: needs.test.result == 'success'
     environment:
-      name: ${{ contains(github.ref, 'dev_') && 'staging' || 'production' }}
+      # name: ${{ contains(github.ref, 'dev_') && 'staging' || 'production' }}
+      name: 'production'
 
     steps:
       - name: Checkout code
