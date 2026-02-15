@@ -1,9 +1,9 @@
 class ButtonText:
     # Reply Keyboard
-    START_DIALOG = "Начать диалог💬"
-    HELP = "Помощь 💡"
-    SUBSCRIPTION = "Подписка⭐"
-    PROFILE = "Профиль 👤"
+    START_DIALOG = "Начать диалог"
+    HELP = "Помощь"
+    SUBSCRIPTION = "Подписка"
+    PROFILE = "👤 Профиль"
 
     # Help Menu
     HELP_START_DIALOG = "Начать диалог 💬"
