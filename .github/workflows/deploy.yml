@@ -132,13 +132,9 @@ jobs:
             echo "STORE_ID=${{ secrets.STORE_ID }}" >> .env
             echo "STORE_TOKEN=${{ secrets.STORE_TOKEN }}" >> .env
             
-            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-              echo ENVIRONMENT=development >> .env
-              echo DOCS_ENABLE=False >> .env
-            else
-              echo ENVIRONMENT=staging >> .env
-              echo DOCS_ENABLE=True >> .env
-
+            echo ENVIRONMENT=development >> .env
+            echo DOCS_ENABLE=False >> .env
+          
             fi
             echo LOG_LEVEL=INFO >> .env
           EOF
@@ -146,10 +142,7 @@ jobs:
       - name: Determine compose file
         id: compose
         run: |
-          COMPOSE_FILE="docker-compose.staging.yml"
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            COMPOSE_FILE="docker-compose.prod.yml"
-          fi
+          COMPOSE_FILE="docker-compose.prod.yml"
           
           echo "COMPOSE_FILE=$COMPOSE_FILE" >> $GITHUB_OUTPUT
           echo "Selected: $COMPOSE_FILE"
