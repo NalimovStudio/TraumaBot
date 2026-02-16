@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from source.core.lexicon import message_templates
-from source.materials.get_file import get_file_by_name
+from source.core.materials.get_file import get_file_by_name
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 
 logger = logging.getLogger(__name__)

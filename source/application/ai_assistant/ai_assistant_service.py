@@ -128,3 +128,7 @@ class AssistantService(AssistantServiceInterface):
             response_schema=response_schema,
             need_json=True
         )
+
+assistant_service: AssistantService = AssistantService()
+async def get_assistant_service() -> AssistantService:
+    return

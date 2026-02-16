@@ -44,7 +44,6 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
             [KeyboardButton(
                 text=ButtonText.PROFILE,
                 style="default",
-                icon_custom_emoji_id="5971867376130461576",
             )],
         ],
         resize_keyboard=True,
@@ -390,6 +389,7 @@ def get_user_characteristics_listing_keyboard(
         buttons.append([
             InlineKeyboardButton(
                 text=ButtonText.GENERATE_CHARACTERISTIC,
+                style="danger",
                 callback_data=GenerateUserCharacteristicCallback().pack()
             )]
         )

@@ -6,9 +6,9 @@ class ButtonText:
     PROFILE = "👤 Профиль"
 
     # Help Menu
-    HELP_START_DIALOG = "Начать диалог 💬"
-    HELP_SUPPORT_METHODS = "Методы поддержки 💡"
-    BACK_TO_HELP = "Назад к помощи ↩️"
+    HELP_START_DIALOG = "Начать диалог"
+    HELP_SUPPORT_METHODS = "Методы поддержки"
+    BACK_TO_HELP = "Назад к помощи"
 
     # Subscription
     BUY_STANDARD = "Купить Стандарт 👑"
@@ -49,7 +49,7 @@ class ButtonText:
     # CALMING = "Успокоиться"
     PROBLEM_SOLVING = "Потенциальное решение проблемы"
     SPEAKING = "Поговорить"
-    RELATIONSHIPS = "👫 Отношения"
+    RELATIONSHIPS = "Отношения"
 
     # Inline Keyboard - Calming flow
     ANOTHER_CYCLE = "ещё 1 цикл"

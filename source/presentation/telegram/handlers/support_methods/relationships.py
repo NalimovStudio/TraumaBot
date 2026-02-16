@@ -17,7 +17,7 @@ from source.application.user.user_logs import CreateUserLog
 from source.core.lexicon import message_templates
 from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.materials.get_file import get_file_by_name
+from source.core.materials.get_file import get_file_by_name
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, \
     get_back_to_menu_keyboard

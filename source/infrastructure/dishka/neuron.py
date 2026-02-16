@@ -1,8 +1,10 @@
 from dishka import Provider, provide, Scope
 from openai import OpenAI
 
-from source.infrastructure.config import AssistantConfig
+
 from source.infrastructure.ai_assistant.ai_assistant import AssistantClient
+from source.infrastructure.configs import AssistantConfig
+
 
 class AssistantProvider(Provider):
     scope = Scope.REQUEST
@@ -14,4 +16,3 @@ class AssistantProvider(Provider):
     @provide
     def get_assistant(self, client: OpenAI) -> AssistantClient:
         return AssistantClient(client=client)
-        

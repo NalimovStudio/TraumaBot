@@ -12,3 +12,7 @@ class GetUserCharacteristicCallback(CallbackData, prefix="user_characts"):
 
 class GenerateUserCharacteristicCallback(CallbackData, prefix="generate_characts"):
     pass
+
+# [ mailing ]
+class MailingConfirmationCallback(CallbackData, prefix="mailing_conf"):
+    pass

@@ -2,6 +2,7 @@ from dishka import make_async_container, AsyncContainer
 from dishka.integrations.aiogram import AiogramProvider
 from dishka.integrations.fastapi import FastapiProvider
 
+from .arq_provider import ArqProvider
 from .bot import BotProvider, DispatcherProvider
 from .config import ConfigProvider
 from .db import DatabaseProvider
@@ -25,6 +26,7 @@ def make_dishka_container() -> AsyncContainer:
             BotProvider(),
             DispatcherProvider(),
             AiogramProvider(),
-            FastapiProvider()
+            FastapiProvider(),
+            ArqProvider()
         ]
     )

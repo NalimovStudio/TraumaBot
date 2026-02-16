@@ -20,7 +20,7 @@ from source.core.lexicon.message_templates import PROBLEM_SOLVING_START
 from source.core.lexicon.prompts import PATHWAYS_TO_SOLVE_PROBLEM_PROMPT
 from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.materials.get_file import get_file_by_name
+from source.core.materials.get_file import get_file_by_name
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback, ProblemSolvingCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, get_problem_solutions_keyboard
 from source.presentation.telegram.states.user_states import SupportStates

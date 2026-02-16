@@ -9,7 +9,7 @@ from dishka.integrations.aiogram import inject, FromDishka
 
 from source.application.user.user_mood import SetMood
 from source.core.lexicon.ButtonText import ButtonText
-from source.materials.get_file import get_file_by_name
+from source.core.materials.get_file import get_file_by_name
 from source.presentation.telegram.callbacks.method_callbacks import HelpCallback
 from source.presentation.telegram.keyboards.keyboards import get_support_methods_keyboard
 from source.presentation.telegram.states.user_states import SupportStates

@@ -13,3 +13,8 @@ MIN_LOGGING_RECORDS = 10
 
 # [ сколько должно пройти с последней генерации для новой ]
 MIN_DAYS_AFTER_LAST_CHARACTERISTIC_GENERATION = 7
+
+# [ ADMIN TOOLS ]
+ADMINS_TG_ID = [
+    '5340001617'
+]

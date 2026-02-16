@@ -124,6 +124,21 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
+  arq_worker:
+    build: .
+    container_name: worker
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - DEBUG=false
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - db
+    command: arq infrastructure.configs.arq_config.WorkerSettings --watch core/task_logic
+    restart: unless-stopped
 
 volumes:
   pg_data:
