@@ -1,10 +1,9 @@
+from typing import AsyncIterable
 
 from dishka import Provider, provide, Scope
-from typing import AsyncIterable
-from contextlib import asynccontextmanager 
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine, AsyncSession, create_async_engine
 
-from source.infrastructure.config import DatabaseConfig
+from source.infrastructure.configs import DatabaseConfig
 from source.infrastructure.database.uow import UnitOfWork
 
 
@@ -22,7 +21,7 @@ class DatabaseProvider(Provider):
     @provide
     async def get_pool(self, engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
         return async_sessionmaker(engine, expire_on_commit=False)
-    
+
     @provide(scope=Scope.REQUEST)
     async def get_session(self, pool: async_sessionmaker[AsyncSession]) -> AsyncIterable[AsyncSession]:
         async with pool() as session:
@@ -31,4 +30,4 @@ class DatabaseProvider(Provider):
             finally:
                 pass
 
-    uow=provide(UnitOfWork, scope=Scope.REQUEST)
+    uow = provide(UnitOfWork, scope=Scope.REQUEST)

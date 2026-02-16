@@ -5,7 +5,7 @@ from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
 from dishka import Provider, Scope, provide, AsyncContainer
 from dishka.integrations.aiogram import setup_dishka
 
-from source.infrastructure.config import BotConfig
+from source.infrastructure.configs import BotConfig
 from source.presentation.telegram.handlers import handlers_router
 from source.presentation.telegram.middlewares import LoadUserMiddleware, LimitCheckMiddleware
 from source.presentation.telegram.middlewares.load_user_mood import LoadUserMood

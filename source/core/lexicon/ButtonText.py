@@ -3,7 +3,7 @@ class ButtonText:
     START_DIALOG = "Начать диалог"
     HELP = "Помощь"
     SUBSCRIPTION = "Подписка"
-    PROFILE = "👤 Профиль"
+    PROFILE = "👤  Профиль"
 
     # Help Menu
     HELP_START_DIALOG = "Начать диалог"
@@ -32,8 +32,8 @@ class ButtonText:
     SUB_PRO_12_MONTHS = "1 год/8899₽"
     SUB_PRO_12_MONTHS_PRICE = "8899.00"
 
-    BACK = "Назад ↩️"
-    BACK_TO_PROFILE = "Назад в профиль ↩️"
+    BACK = "Назад"
+    BACK_TO_PROFILE = "Назад в профиль"
 
     # [ characteristic ]
     GENERATE_CHARACTERISTIC = "Сгенерировать характеристику"

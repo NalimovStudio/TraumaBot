@@ -237,6 +237,7 @@ def get_standard_subscription_options_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=ButtonText.BACK,
+                    icon_custom_emoji_id="5273933451068724212",
                     callback_data=SubscriptionCallback(menu="main").pack(),
                 )
             ],
@@ -278,6 +279,7 @@ def get_pro_subscription_options_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=ButtonText.BACK,
+                    icon_custom_emoji_id="5273933451068724212",
                     callback_data=SubscriptionCallback(menu="main").pack(),
                 )
             ],
@@ -397,6 +399,7 @@ def get_user_characteristics_listing_keyboard(
     buttons.append([
         InlineKeyboardButton(
             text=ButtonText.BACK_TO_PROFILE,
+            icon_custom_emoji_id="5273933451068724212",
             callback_data=UserProfileCallback().pack()
         )
     ])

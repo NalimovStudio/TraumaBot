@@ -118,6 +118,8 @@ jobs:
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
             echo "REDIS_DATABASE=${{ secrets.REDIS_DATABASE }}" >> .env
           
+            echo "ARQ_REDIS_URL=${{ secrets.ARQ_REDIS_URL }}" >> .env
+          
             echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" >> .env
             echo "ASSISTANT_API_KEY=${{ secrets.ASSISTANT_API_KEY }}" >> .env
           
@@ -132,7 +134,7 @@ jobs:
             echo "STORE_ID=${{ secrets.STORE_ID }}" >> .env
             echo "STORE_TOKEN=${{ secrets.STORE_TOKEN }}" >> .env
             
-            echo ENVIRONMENT=development >> .env
+            echo ENVIRONMENT=production >> .env
             echo DOCS_ENABLE=False >> .env
           
             echo LOG_LEVEL=INFO >> .env

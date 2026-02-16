@@ -2,7 +2,7 @@ import logging
 
 from openai import OpenAI
 
-from source.core.exceptions import AssistantResponseException, AssistantException
+from source.core.exceptions import AssistantResponseException
 from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
 from source.core.schemas.user_schema import UserCharacteristicSchema
 from source.infrastructure.database.models.base_model import S
@@ -46,18 +46,18 @@ class AssistantClient:
 
         try:
             response = self.client.chat.completions.create(
-                model="deepseek-chat",
+                model="minimax/minimax-m2.5",
                 messages=messages,
                 temperature=temperature,
                 response_format={"type": "json_object"} if need_json else None
             )
         except Exception as e:
-            logger.error(f"Ошибка при обращении к DeepseekAPI: {e}")
-            raise AssistantException
+            logger.error(f"Ошибка при обращении к openrouter: {e}")
+            raise e
 
         try:
             response_content = response.choices[0].message.content
-            logger.info(f"Получен ответ от Deepseek: {response_content}")
+            logger.info(f"Получен ответ от openai: {response_content}")
 
             if response_schema:
                 validated_response = response_schema.model_validate_json(response_content)
@@ -66,6 +66,6 @@ class AssistantClient:
                 return AssistantResponse.model_validate({"message": response_content})
 
         except Exception as e:
-            logger.error(f"Ошибка валидации ответа от Deepseek: {e}")
+            logger.error(f"Ошибка валидации ответа от openai: {e}")
             logger.error(f"Содержимое ответа: {response.choices[0].message.content}")
             raise AssistantResponseException

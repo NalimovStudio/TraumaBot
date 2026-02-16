@@ -6,6 +6,7 @@ from .profile import router as profile_router
 from .risk_protocol import router as risk_protocol_router
 from .start import router as start_router
 from .subscription import router as subscription_router
+from .mailing import router as mailing_router
 from .support_methods import (
     calming_router,
     cbt_router,
@@ -23,6 +24,7 @@ handlers_router = Router(name="main_handlers_router")
 handlers_router.include_routers(
     # [ приоритет ]
     start_router,
+    mailing_router,
     profile_router,  # профиль юзера
     check_in_router,  # запись настроения
     main_menu_router,  # Навигация по главному меню (Reply-кнопки)

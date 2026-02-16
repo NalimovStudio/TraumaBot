@@ -115,7 +115,6 @@ class AssistantService(AssistantServiceInterface):
     ) -> UserCharacteristicAssistantResponse:
         """Генерация хар-ки в формате UserCharacteristicSchema"""
 
-        # TODO сделать лимит чтобы не было слишком много сообщений (в отдельном и во всех)
         user_logs_query: str = ", ".join([log.message_text for log in user_logs_history])
 
         user_moods_query: str = ", ".join([str(mood.mood) for mood in user_mood_history])
@@ -128,7 +127,3 @@ class AssistantService(AssistantServiceInterface):
             response_schema=response_schema,
             need_json=True
         )
-
-assistant_service: AssistantService = AssistantService()
-async def get_assistant_service() -> AssistantService:
-    return

@@ -11,7 +11,7 @@ class AssistantProvider(Provider):
 
     @provide
     def get_openai(self, config: AssistantConfig) -> OpenAI:
-        return OpenAI(api_key=config.api_key.get_secret_value(), base_url="https://api.deepseek.com")
+        return OpenAI(api_key=config.api_key.get_secret_value(), base_url="https://routerai.ru/api/v1/chat/completions")
 
     @provide
     def get_assistant(self, client: OpenAI) -> AssistantClient:

@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramRetryAfter
+from dishka.integrations.aiogram import setup_dishka as setup_dishka_aiogram
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
@@ -56,6 +57,10 @@ async def lifespan(app: FastAPI):
         # Получаем зависимости из контейнера
         bot: Bot = await dishka_container.get(Bot)
         dp: Dispatcher = await dishka_container.get(Dispatcher)
+
+        setup_dishka_aiogram(dishka_container, dp, auto_inject=True)
+
+        await dp.emit_startup()
 
         # Удаляем вебхук перед запуском
         await delete_webhook(bot)

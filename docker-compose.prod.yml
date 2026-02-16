@@ -130,14 +130,17 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}  # use service name 'db' as host
       - DEBUG=false
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO
     depends_on:
-      - redis
-      - db
-    command: arq infrastructure.configs.arq_config.WorkerSettings --watch core/task_logic
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      poetry run arq source.infrastructure.configs.arq_config.WorkerSettings
     restart: unless-stopped
 
 volumes:

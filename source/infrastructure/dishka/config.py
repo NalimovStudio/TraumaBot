@@ -1,9 +1,9 @@
 from dishka import Provider, provide, Scope
-from source.infrastructure.config import DatabaseConfig, get_database_config
-from source.infrastructure.config import BotConfig, get_bot_config
-from source.infrastructure.config import RedisConfig, get_redis_config
-from source.infrastructure.config import AssistantConfig, get_assistant_config
-from source.infrastructure.config import PaymentConfig, get_payment_config
+from source.infrastructure.configs import DatabaseConfig, get_database_config
+from source.infrastructure.configs import BotConfig, get_bot_config
+from source.infrastructure.configs import RedisConfig, get_redis_config
+from source.infrastructure.configs import AssistantConfig, get_assistant_config
+from source.infrastructure.configs import PaymentConfig, get_payment_config
 
 from environs import Env
 
