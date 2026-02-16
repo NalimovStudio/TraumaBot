@@ -135,7 +135,6 @@ jobs:
             echo ENVIRONMENT=development >> .env
             echo DOCS_ENABLE=False >> .env
           
-            fi
             echo LOG_LEVEL=INFO >> .env
           EOF
 
