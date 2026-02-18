@@ -4,7 +4,7 @@ from typing import Sequence, Generator
 
 from dishka.integrations.arq import inject, FromDishka
 
-from source.application.services.telegram_service import TelegramService
+from source.application.services.telegram_service.telegram_service import TelegramService
 from source.core.lexicon.rules import ADMINS_TG_ID
 from source.core.schemas import UserSchema
 from source.infrastructure.database.repository import UserRepository

@@ -1,6 +1,6 @@
 import logging
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from source.core.exceptions import AssistantResponseException
 from source.core.schemas.assistant_schemas import ContextMessage, AssistantResponse
@@ -16,7 +16,7 @@ ASSISTANT_RESPONSES = (
 
 
 class AssistantClient:
-    def __init__(self, client: OpenAI):
+    def __init__(self, client: AsyncOpenAI):
         self.client = client
 
     async def get_response(
@@ -45,7 +45,7 @@ class AssistantClient:
         messages.append({"role": "user", "content": f"{message}"})
 
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model="minimax/minimax-m2.5",
                 messages=messages,
                 temperature=temperature,

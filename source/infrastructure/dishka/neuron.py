@@ -1,5 +1,5 @@
 from dishka import Provider, provide, Scope
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 
 from source.infrastructure.ai_assistant.ai_assistant import AssistantClient
@@ -10,9 +10,9 @@ class AssistantProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def get_openai(self, config: AssistantConfig) -> OpenAI:
-        return OpenAI(api_key=config.api_key.get_secret_value(), base_url="https://routerai.ru/api/v1/")
+    def get_openai(self, config: AssistantConfig) -> AsyncOpenAI:
+        return AsyncOpenAI(api_key=config.api_key.get_secret_value(), base_url="https://routerai.ru/api/v1/")
 
     @provide
-    def get_assistant(self, client: OpenAI) -> AssistantClient:
+    def get_assistant(self, client: AsyncOpenAI) -> AssistantClient:
         return AssistantClient(client=client)
