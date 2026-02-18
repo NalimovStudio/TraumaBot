@@ -4,7 +4,7 @@ from typing import List
 
 from redis.asyncio import Redis
 
-from source.application.redis_services.message_history.MessageHistoryServiceInterface import \
+from source.application.services.redis_services.message_history.MessageHistoryServiceInterface import \
     MessageHistoryServiceInterface
 from source.core.schemas.assistant_schemas import ContextMessage
 

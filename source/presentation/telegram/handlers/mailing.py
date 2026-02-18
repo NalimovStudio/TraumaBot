@@ -5,7 +5,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 from dishka.integrations.aiogram import FromDishka, inject
 
-from source.application.arq.arq_service import TaskService
+from source.application.services.arq_service import TaskService
 from source.core.lexicon.rules import ADMINS_TG_ID
 
 router = Router(name=__name__)

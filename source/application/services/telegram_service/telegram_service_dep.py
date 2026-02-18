@@ -1,4 +1,4 @@
-from source.application.telegram_service.telegram_service import TelegramService
+from source.application.services.telegram_service.telegram_service import TelegramService
 
 telegram_service: TelegramService = TelegramService()
 

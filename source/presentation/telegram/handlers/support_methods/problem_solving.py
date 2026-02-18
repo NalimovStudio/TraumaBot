@@ -10,8 +10,8 @@ from aiogram.types import CallbackQuery, Message
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject, FromDishka
 
-from source.application.ai_assistant.ai_assistant_service import AssistantService
-from source.application.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.ai_assistant.ai_assistant_service import AssistantService
+from source.application.services.redis_services.message_history.message_history_service import MessageHistoryService
 from source.application.subscription.subscription_service import SubscriptionService
 from source.application.user import GetUserSchemaById
 from source.application.user.user_logs import CreateUserLog

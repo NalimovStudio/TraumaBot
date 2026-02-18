@@ -1,8 +1,9 @@
+import io
 import logging
 import random
 import uuid
 
-from aiogram import F, Router
+from aiogram import F, Router, Bot
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
@@ -11,16 +12,17 @@ from aiogram.types import CallbackQuery, Message
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject, FromDishka
 
-from source.application.ai_assistant.ai_assistant_service import AssistantService
-from source.application.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.ai_assistant.ai_assistant_service import AssistantService
+from source.application.services.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.speech_service import SpeechService
 from source.application.subscription.subscription_service import SubscriptionService
 from source.application.user import GetUserSchemaById
 from source.application.user.user_logs import CreateUserLog
 from source.core.lexicon import message_templates
 from source.core.lexicon.message_templates import VENTING_START
+from source.core.materials.get_file import get_file_by_name
 from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.core.materials.get_file import get_file_by_name
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard
 from source.presentation.telegram.states.user_states import SupportStates
@@ -51,9 +53,9 @@ async def handle_vent_out_method(query: CallbackQuery, state: FSMContext):
 
 @router.message(Command("stop"), SupportStates.SPEAKING)
 async def handle_stop_venting(
-    message: Message,
-    state: FSMContext,
-    **data,
+        message: Message,
+        state: FSMContext,
+        **data,
 ):
     container: AsyncContainer = data["dishka_container"]
     history: MessageHistoryService = await container.get(MessageHistoryService)
@@ -71,16 +73,75 @@ async def handle_stop_venting(
     )
 
 
+@router.message(F.voice, SupportStates.SPEAKING)
+@inject
+async def handle_venting_voice(
+        message: Message,
+        speech_service: FromDishka[SpeechService],
+        bot: FromDishka[Bot],
+
+        state: FSMContext,
+        create_user_log: FromDishka[CreateUserLog],
+        assistant_service: FromDishka[AssistantService],
+        message_history_service: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
+        get_user_schema_interactor: FromDishka[GetUserSchemaById],
+):
+    buffer = io.BytesIO()
+    await bot.download(message.voice, destination=buffer)
+    buffer.seek(0)
+
+    message_reply = await message.reply("Обработка голоса..")
+
+    text: str = await speech_service.transcribe_bytes(buffer.getvalue())
+
+    if not text:
+        await message.reply(text or "Не удалось распознать речь")
+        return
+
+    await message_reply.delete()
+
+    await venting_message(
+        message,
+        state,
+        create_user_log,
+        assistant_service,
+        message_history_service,
+        subscription_service,
+        get_user_schema_interactor
+    )
+
+
 @router.message(SupportStates.SPEAKING)
 @inject
 async def handle_venting_message(
-    message: Message,
-    state: FSMContext,
-    create_user_log: FromDishka[CreateUserLog],
-    assistant_service: FromDishka[AssistantService],
-    message_history_service: FromDishka[MessageHistoryService],
-    subscription_service: FromDishka[SubscriptionService],
-    get_user_schema_interactor: FromDishka[GetUserSchemaById],
+        message: Message,
+        state: FSMContext,
+        create_user_log: FromDishka[CreateUserLog],
+        assistant_service: FromDishka[AssistantService],
+        message_history_service: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
+        get_user_schema_interactor: FromDishka[GetUserSchemaById],
+):
+    await venting_message(
+        message,
+        state,
+        create_user_log,
+        assistant_service,
+        message_history_service,
+        subscription_service,
+        get_user_schema_interactor
+    )
+
+
+async def venting_message(
+        message: Message,
+        state: FSMContext,
+        create_user_log: FromDishka[CreateUserLog],
+        assistant_service: FromDishka[AssistantService],
+        message_history_service: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
+        get_user_schema_interactor: FromDishka[GetUserSchemaById],
 ):
     state_data = await state.get_data()
     dialogue_id = state_data["dialogue_id"]

@@ -5,8 +5,8 @@ from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from source.application.ai_assistant.ai_assistant_service import AssistantService
-from source.application.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.ai_assistant.ai_assistant_service import AssistantService
+from source.application.services.redis_services.message_history.message_history_service import MessageHistoryService
 from source.application.user import GetUserSchemaById
 from source.application.user.user_logs import CreateUserLog
 from source.core.lexicon.prompts import KPT_DIARY_PROMPT

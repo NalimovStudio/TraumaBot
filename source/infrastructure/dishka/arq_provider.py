@@ -4,7 +4,7 @@ from arq import ArqRedis, create_pool
 from arq.connections import RedisSettings
 from dishka import Provider, provide, Scope
 
-from source.application.arq.arq_service import TaskService
+from source.application.services.arq_service import TaskService
 
 
 class ArqProvider(Provider):

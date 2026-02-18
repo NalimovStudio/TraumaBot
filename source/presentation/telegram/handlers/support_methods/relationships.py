@@ -1,3 +1,4 @@
+import io
 import logging
 import random
 import uuid
@@ -9,15 +10,16 @@ from aiogram.types import CallbackQuery, Message
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject, FromDishka
 
-from source.application.ai_assistant.ai_assistant_service import AssistantService
-from source.application.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.ai_assistant.ai_assistant_service import AssistantService
+from source.application.services.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.speech_service import SpeechService
 from source.application.subscription.subscription_service import SubscriptionService
 from source.application.user import GetUserSchemaById
 from source.application.user.user_logs import CreateUserLog
 from source.core.lexicon import message_templates
+from source.core.materials.get_file import get_file_by_name
 from source.core.schemas import UserLogCreateSchema, UserSchema
 from source.core.schemas.assistant_schemas import ContextMessage
-from source.core.materials.get_file import get_file_by_name
 from source.presentation.telegram.callbacks.method_callbacks import MethodCallback
 from source.presentation.telegram.keyboards.keyboards import get_main_keyboard, \
     get_back_to_menu_keyboard
@@ -76,6 +78,46 @@ async def handle_stop_relationships(
     return
 
 
+@router.message(F.voice, SupportStates.RELATIONSHIPS)
+@inject
+async def handle_venting_voice(
+        message: Message,
+        speech_service: FromDishka[SpeechService],
+        bot: FromDishka[Bot],
+
+        state: FSMContext,
+        create_user_log: FromDishka[CreateUserLog],
+        assistant_service: FromDishka[AssistantService],
+        message_history_service: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
+        get_user_schema_interactor: FromDishka[GetUserSchemaById],
+):
+    buffer = io.BytesIO()
+    await bot.download(message.voice, destination=buffer)
+    buffer.seek(0)
+
+    message_reply = await message.reply("Обработка голоса..")
+
+    text: str = await speech_service.transcribe_bytes(buffer.getvalue())
+
+    if not text:
+        await message.reply(text or "Не удалось распознать речь")
+        return
+
+    await message_reply.delete()
+
+    await relationships_talking(
+        message,
+        state,
+        bot,
+        create_user_log,
+        assistant_service,
+        message_history_service,
+        subscription_service,
+        get_user_schema_interactor
+    )
+
+
 @router.message(SupportStates.RELATIONSHIPS)
 @inject
 async def handle_relationships_talking(
@@ -91,7 +133,28 @@ async def handle_relationships_talking(
     """
     процесс разговора с ассистентом
     """
+    await relationships_talking(
+        message,
+        state,
+        bot,
+        create_user_log,
+        assistant_service,
+        message_history_service,
+        subscription_service,
+        get_user_schema_interactor
+    )
 
+
+async def relationships_talking(
+        message: Message,
+        state: FSMContext,
+        bot: FromDishka[Bot],
+        create_user_log: FromDishka[CreateUserLog],
+        assistant_service: FromDishka[AssistantService],
+        message_history_service: FromDishka[MessageHistoryService],
+        subscription_service: FromDishka[SubscriptionService],
+        get_user_schema_interactor: FromDishka[GetUserSchemaById],
+):
     state_data = await state.get_data()
     dialogue_id = state_data["dialogue_id"]
     user_telegram_id = str(message.from_user.id)
@@ -121,7 +184,8 @@ async def handle_relationships_talking(
     message_history = await message_history_service.get_history(user_telegram_id, context_scope)
 
     try:
-        message_waiting_response: Message = await message.answer(random.choice(message_templates.RELATIONSHIPS_WAITING_RESPONSE))
+        message_waiting_response: Message = await message.answer(
+            random.choice(message_templates.RELATIONSHIPS_WAITING_RESPONSE))
         # TODO: utils.get_waiting_message(support_method: SUPPORT_METHODS) + lexicon
 
         response = await assistant_service.get_relationships_response(message=message.text,

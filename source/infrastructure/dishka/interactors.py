@@ -1,14 +1,13 @@
-from arq import ArqRedis
 from dishka import Provider, provide, Scope
 from redis.asyncio import Redis
 
-from source.application.ai_assistant.ai_assistant_service import AssistantService
-from source.application.arq.arq_service import TaskService
+from source.application.services.ai_assistant.ai_assistant_service import AssistantService
 from source.application.payment.merge import MergePayment
 from source.application.payment.payment_service import PaymentService
-from source.application.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.redis_services.message_history.message_history_service import MessageHistoryService
+from source.application.services.speech_service import SpeechService
+from source.application.services.telegram_service.telegram_service import TelegramService
 from source.application.subscription.subscription_service import SubscriptionService
-from source.application.telegram_service.telegram_service import TelegramService
 from source.application.user import CreateUser, GetUserById, GetUserSchemaById, MergeUser
 from source.application.user.user_characteristic import GetUserCharacteristics, PutGeneratedUserCharacteristic, \
     MayGenerateCharacteristic
@@ -26,7 +25,7 @@ class InteractorsProvider(Provider):
 
     # [ payment ]
     merge_payment = provide(MergePayment)
-    
+
     # [ user ]
     create_user = provide(CreateUser)
     get_user_interactor = provide(GetUserById)
@@ -49,6 +48,7 @@ class InteractorsProvider(Provider):
     may_generate_characteristic = provide(MayGenerateCharacteristic)
 
     # [ Services ]
+    speech_service = provide(SpeechService)
     telegram_service = provide(TelegramService)
 
     @provide

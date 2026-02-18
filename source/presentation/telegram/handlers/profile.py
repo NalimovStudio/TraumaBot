@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject, FromDishka
 
-from source.application.ai_assistant.ai_assistant_service import AssistantService
+from source.application.services.ai_assistant.ai_assistant_service import AssistantService
 from source.application.user.user_characteristic import GetUserCharacteristics, PutGeneratedUserCharacteristic, \
     MayGenerateCharacteristic
 from source.application.user.user_logs import GetLastUserLogs, GetAllUserLogs

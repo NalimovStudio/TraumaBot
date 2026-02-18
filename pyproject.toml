@@ -51,6 +51,7 @@ dependencies = [
     "nats-py (>=2.11.0,<3.0.0)",
     "faststream (>=0.5.48,<0.6.0)",
     "arq (>=0.27.0,<0.28.0)",
+    "deepgram-sdk (>=5.3.2,<6.0.0)",
 ]
 
 [tool.poetry]

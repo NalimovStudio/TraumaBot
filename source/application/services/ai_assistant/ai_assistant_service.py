@@ -1,4 +1,4 @@
-from source.application.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
+from source.application.services.ai_assistant.AssistantServiceInterface import AssistantServiceInterface
 from source.core.lexicon.prompts import GET_CALM_PROMPT, KPT_DIARY_PROMPT, PROBLEMS_SOLVER_PROMPT, SPEAKING_PROMPT, \
     RELATIONSHIPS_PROMPT, GET_USER_CHARACTERISTIC
 from source.core.schemas import UserLogSchema

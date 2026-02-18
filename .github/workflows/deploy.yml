@@ -134,6 +134,8 @@ jobs:
             echo "STORE_ID=${{ secrets.STORE_ID }}" >> .env
             echo "STORE_TOKEN=${{ secrets.STORE_TOKEN }}" >> .env
             
+            echo "SPEECH_API_KEY=${{ secrets.SPEECH_API_KEY }}" >> .env
+            
             echo ENVIRONMENT=production >> .env
             echo DOCS_ENABLE=False >> .env
           
