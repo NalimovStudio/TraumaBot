@@ -108,7 +108,8 @@ async def handle_venting_voice(
         assistant_service,
         message_history_service,
         subscription_service,
-        get_user_schema_interactor
+        get_user_schema_interactor,
+        text_from_speech=text
     )
 
 
@@ -142,6 +143,7 @@ async def venting_message(
         message_history_service: FromDishka[MessageHistoryService],
         subscription_service: FromDishka[SubscriptionService],
         get_user_schema_interactor: FromDishka[GetUserSchemaById],
+        text_from_speech: str = None
 ):
     state_data = await state.get_data()
     dialogue_id = state_data["dialogue_id"]
@@ -149,20 +151,26 @@ async def venting_message(
     user: UserSchema = await get_user_schema_interactor(telegram_id=user_telegram_id)
 
     context_scope = "venting"
-    logger.info(f"User {user_telegram_id} is venting. Msg: '{message.text[:30]}...'")
+    if not text_from_speech:
+        logger.info(f"User {user_telegram_id} is venting. Msg: '{message.text[:30]}...'")
 
     # [ сохраняем лог в БД]
     await create_user_log(
         user_log=UserLogCreateSchema(
             dialog_id=dialogue_id,
-            message_text=message.text,
+            message_text=text_from_speech if text_from_speech else message.text,
             user_id=user.id
         )
     )
     logger.info(f"User log created: dialog_id = {dialogue_id}")
 
     await message_history_service.add_message_to_history(
-        user_telegram_id, context_scope, ContextMessage(role="user", message=message.text)
+        user_telegram_id,
+        context_scope,
+        ContextMessage(
+            role="user",
+            message=text_from_speech if text_from_speech else message.text
+        )
     )
     message_history = await message_history_service.get_history(user_telegram_id, context_scope)
 
@@ -173,7 +181,7 @@ async def venting_message(
         # TODO: utils.get_waiting_message(support_method: SUPPORT_METHODS) + lexicon
 
         response = await assistant_service.get_speaking_response(
-            message=message.text,
+            message=text_from_speech if text_from_speech else message.text,
             context_messages=message_history
         )
         response_text = response.message

@@ -31,7 +31,8 @@ class TaskService:
     ):
         job: Job = await self.arq_pool.enqueue_job(
             ARQ_JOBS.MAILING.value,
-            message
+            message,
+            _queue_name="arq:queue"
         )
         logger.info(f"Задача на рассылку поставлена в очередь!")
 

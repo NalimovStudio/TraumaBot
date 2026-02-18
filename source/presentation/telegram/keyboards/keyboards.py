@@ -38,7 +38,7 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
             )],
             [KeyboardButton(
                 text=ButtonText.SUBSCRIPTION,
-                style="default",
+                style="primary",
                 icon_custom_emoji_id="5852855309827051115",
             )],
             [KeyboardButton(

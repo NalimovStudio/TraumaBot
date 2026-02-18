@@ -19,7 +19,7 @@ class WorkerSettings:
 
     redis_settings = RedisSettings.from_dsn(os.getenv('ARQ_REDIS_URL'))
 
-    queue_name = "arq_service:queue"
+    queue_name = "arq:queue"
     max_jobs = 10
     job_timeout = 1800  # 100 минут timeout на задачу
     keep_result = 3600  # Хранить результат 100 мин

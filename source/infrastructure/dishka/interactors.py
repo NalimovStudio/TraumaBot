@@ -1,3 +1,5 @@
+import os
+
 from dishka import Provider, provide, Scope
 from redis.asyncio import Redis
 
@@ -6,7 +8,7 @@ from source.application.payment.merge import MergePayment
 from source.application.payment.payment_service import PaymentService
 from source.application.services.redis_services.message_history.message_history_service import MessageHistoryService
 from source.application.services.speech_service import SpeechService
-from source.application.services.telegram_service.telegram_service import TelegramService
+from source.application.services.telegram_service import TelegramService
 from source.application.subscription.subscription_service import SubscriptionService
 from source.application.user import CreateUser, GetUserById, GetUserSchemaById, MergeUser
 from source.application.user.user_characteristic import GetUserCharacteristics, PutGeneratedUserCharacteristic, \
@@ -48,6 +50,10 @@ class InteractorsProvider(Provider):
     may_generate_characteristic = provide(MayGenerateCharacteristic)
 
     # [ Services ]
+    @provide(scope=Scope.APP)
+    def speech_api_key(self) -> str:
+        return os.getenv("SPEECH_API_KEY")
+
     speech_service = provide(SpeechService)
     telegram_service = provide(TelegramService)
 

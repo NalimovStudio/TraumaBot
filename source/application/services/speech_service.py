@@ -17,23 +17,17 @@ class SpeechService:
 
     def __init__(
             self,
-            api_key: Optional[str] = os.getenv("SPEECH_API_KEY"),
-            default_model: str = "nova-2",  # или "nova-3" / "nova-2-general" и т.д.
-            default_language: str = "ru",
-            smart_format: bool = True,
-            punctuate: bool = True,
-            paragraphs: bool = False,
-            diarize: bool = False,
+            api_key: str = os.getenv("SPEECH_API_KEY"),
     ):
         self.client = DeepgramClient(api_key=api_key)
 
         self.default_options = {
-            "model": default_model,
-            "language": default_language,
-            "smart_format": smart_format,
-            "punctuate": punctuate,
-            "paragraphs": paragraphs,
-            "diarize": diarize,
+            "model": "nova-2",
+            "language": "ru",
+            "smart_format": True,
+            "punctuate": True,
+            "paragraphs": False,
+            "diarize": False,
             # Дополнительно: "utterances": True, "numerals": True, "profanity_filter": False и т.д.
         }
 
