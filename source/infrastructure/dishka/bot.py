@@ -46,5 +46,4 @@ class DispatcherProvider(Provider):
 
         dp.message.middleware(LimitCheckMiddleware())
 
-        setup_dishka(dishka, dp, auto_inject=True)
         return dp
