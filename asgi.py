@@ -37,8 +37,8 @@ async def lifespan(app: FastAPI):
                     logger.error(f"❌ Failed to set webhook after {max_attempts} attempts: {e}")
                     return False
             except Exception as e:
-                logger.error(f"❌ Failed to set webhook: {e}")
-                return False
+                logger.error(f"❌ Ошибка попытки {attempt}: {type(e).__name__} | {e}", exc_info=True)
+                await asyncio.sleep(3)
 
     async def delete_webhook(bot: Bot):
         """Удаляет вебхук при завершении работы"""
