@@ -26,30 +26,55 @@ async def lifespan(app: FastAPI):
     async def start_polling(bot: Bot, dp: Dispatcher):
         """Запускает polling для получения обновлений от Telegram"""
         try:
-            logger.info("🔄 Удаляем старый webhook (если есть)...")
-            await bot.delete_webhook(drop_pending_updates=True, request_timeout=30)
-            logger.info("✅ Webhook удален, начинаем polling...")
+            logger.info("🔄 Проверяем webhook...")
 
+            # Сначала проверяем текущий webhook
+            try:
+                webhook_info = await bot.get_webhook_info(request_timeout=15)
+                if webhook_info.url:
+                    logger.info(f"📍 Найден старый webhook: {webhook_info.url}")
+                    logger.info("🔄 Удаляем старый webhook...")
+                    try:
+                        await bot.delete_webhook(drop_pending_updates=True, request_timeout=60)
+                        logger.info("✅ Webhook удален успешно")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Ошибка при удалении webhook: {type(e).__name__}: {e}")
+                        logger.info("⚠️ Продолжаем с polling несмотря на ошибку удаления")
+
+                    # Даем время Telegram на обновление
+                    await asyncio.sleep(3)
+                else:
+                    logger.info("✅ Webhook не установлен, готовы к polling")
+            except Exception as e:
+                logger.warning(f"⚠️ Не удалось проверить webhook: {type(e).__name__}: {e}")
+                logger.info("⚠️ Продолжаем с polling")
+
+            logger.info("🔄 Начинаем polling обновлений от Telegram...")
             # Запускаем polling
             await dp.start_polling(
                 bot,
                 allowed_updates=["message", "callback_query", "pre_checkout_query", "successful_payment"],
-                skip_updates=True
+                skip_updates=False  # Обрабатываем все обновления (включая накопленные)
             )
+        except asyncio.CancelledError:
+            logger.info("✅ Polling прерван (приложение закрывается)")
+            raise
         except Exception as e:
-            logger.error(f"❌ Ошибка при polling'е: {e}", exc_info=True)
+            logger.error(f"❌ Ошибка при polling'е: {type(e).__name__}: {e}", exc_info=True)
             raise
 
     async def stop_polling():
         """Останавливает polling"""
         if polling_task and not polling_task.done():
+            logger.info("🔄 Останавливаем polling...")
             polling_task.cancel()
             try:
                 await polling_task
             except asyncio.CancelledError:
-                logger.info("✅ Polling остановлен")
+                logger.info("✅ Polling успешно остановлен")
 
     try:
+        logger.info("=" * 60)
         logger.info("🔄 Запускаем Dishka container...")
 
         # Получаем зависимости из контейнера
@@ -65,16 +90,19 @@ async def lifespan(app: FastAPI):
         polling_task = asyncio.create_task(start_polling(bot, dp))
 
         logger.info("✅ Приложение успешно запущено с polling'ом")
+        logger.info("=" * 60)
         yield
 
     except Exception as e:
-        logger.error(f"❌ Ошибка при запуске: {e}", exc_info=True)
+        logger.error(f"❌ Критическая ошибка при запуске: {type(e).__name__}: {e}", exc_info=True)
         raise
     finally:
+        logger.info("=" * 60)
         logger.info("🔄 Закрываем приложение...")
         await stop_polling()
         await dishka_container.close()
-        logger.info("✅ Приложение закрыто")
+        logger.info("✅ Приложение полностью закрыто")
+        logger.info("=" * 60)
 
 
 def create_app() -> FastAPI:
