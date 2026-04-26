@@ -23,33 +23,44 @@ dishka_container = make_dishka_container()
 async def lifespan(app: FastAPI):
     """Lifespan manager for creating Dishka container and setting Telegram webhook"""
 
-    async def set_webhook_with_retry(bot: Bot, webhook_url: str, max_attempts: int = 3):
+    async def delete_webhook(bot: Bot):
+        """Удаляет вебхук с увеличенным таймаутом"""
+        try:
+            logger.info("🔄 Пытаемся удалить старый webhook...")
+            await bot.delete_webhook(
+                drop_pending_updates=True,
+                request_timeout=30  # ← увеличил таймаут
+            )
+            logger.info("✅ Old webhook deleted successfully")
+            await asyncio.sleep(2)
+        except Exception as e:
+            logger.warning(f"⚠️ Не удалось удалить webhook: {e} (это не критично, продолжаем)")
+
+    async def set_webhook_with_retry(bot: Bot, webhook_url: str, max_attempts: int = 5):
         for attempt in range(1, max_attempts + 1):
             try:
-                await bot.set_webhook(webhook_url)
-                logger.info(f"✅ Webhook successfully set to: {webhook_url}")
+                logger.info(f"🔄 Попытка {attempt}/{max_attempts} установить webhook: {webhook_url}")
+
+                current = await bot.get_webhook_info(request_timeout=15)
+                logger.info(f"Текущий webhook: {current.url or 'None'}")
+
+                await bot.set_webhook(
+                    url=webhook_url,
+                    secret_token=os.getenv("TELEGRAM_WEBHOOK_SECRET"),
+                    drop_pending_updates=True,
+                    allowed_updates=["message", "callback_query", "pre_checkout_query", "successful_payment"],
+                    request_timeout=30  # ← важно!
+                )
+                logger.info("✅ Webhook успешно установлен!")
                 return True
-            except TelegramRetryAfter as e:
-                logger.warning(
-                    f"Rate limit hit: retry after {e.retry_after} seconds (attempt {attempt}/{max_attempts})")
-                await asyncio.sleep(e.retry_after)
-                if attempt == max_attempts:
-                    logger.error(f"❌ Failed to set webhook after {max_attempts} attempts: {e}")
-                    return False
+
             except Exception as e:
-                logger.error(f"❌ Ошибка попытки {attempt}: {type(e).__name__} | {e}", exc_info=True)
-                await asyncio.sleep(3)
+                logger.error(f"❌ Ошибка {attempt}: {type(e).__name__} — {e}", exc_info=True)
+                if attempt == max_attempts:
+                    return False
+                await asyncio.sleep(5)
 
-    async def delete_webhook(bot: Bot):
-        """Удаляет вебхук при завершении работы"""
-        try:
-            await bot.delete_webhook(drop_pending_updates=True)
-            logger.info("✅ Old webhook deleted, pending updates dropped")
-
-            await asyncio.sleep(2)
-
-        except Exception as e:
-            logger.error(f"❌ Failed to delete webhook: {e}")
+        return False
 
     try:
         logger.info("🔄 Starting Dishka container...")
