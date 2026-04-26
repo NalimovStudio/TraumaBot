@@ -4,66 +4,53 @@ import os
 from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
-from aiogram.exceptions import TelegramRetryAfter
 from dishka.integrations.aiogram import setup_dishka as setup_dishka_aiogram
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from source.core.logging.logging_config import configure_logging
 from source.infrastructure.dishka import make_dishka_container
-from source.presentation.fastapi.webhooks_router import webhooks_router
+from source.presentation.fastapi.health_router import health_router
 
 configure_logging()
 logger = logging.getLogger(__name__)
 
 dishka_container = make_dishka_container()
+polling_task = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan manager for creating Dishka container and setting Telegram webhook"""
+    """Lifespan manager для инициализации и управления polling'ом"""
 
-    async def delete_webhook(bot: Bot):
-        """Удаляет вебхук с увеличенным таймаутом"""
+    async def start_polling(bot: Bot, dp: Dispatcher):
+        """Запускает polling для получения обновлений от Telegram"""
         try:
-            logger.info("🔄 Пытаемся удалить старый webhook...")
-            await bot.delete_webhook(
-                drop_pending_updates=True,
-                request_timeout=30  # ← увеличил таймаут
+            logger.info("🔄 Удаляем старый webhook (если есть)...")
+            await bot.delete_webhook(drop_pending_updates=True, request_timeout=30)
+            logger.info("✅ Webhook удален, начинаем polling...")
+
+            # Запускаем polling
+            await dp.start_polling(
+                bot,
+                allowed_updates=["message", "callback_query", "pre_checkout_query", "successful_payment"],
+                skip_updates=True
             )
-            logger.info("✅ Old webhook deleted successfully")
-            await asyncio.sleep(2)
         except Exception as e:
-            logger.warning(f"⚠️ Не удалось удалить webhook: {e} (это не критично, продолжаем)")
+            logger.error(f"❌ Ошибка при polling'е: {e}", exc_info=True)
+            raise
 
-    async def set_webhook_with_retry(bot: Bot, webhook_url: str, max_attempts: int = 5):
-        for attempt in range(1, max_attempts + 1):
+    async def stop_polling():
+        """Останавливает polling"""
+        if polling_task and not polling_task.done():
+            polling_task.cancel()
             try:
-                logger.info(f"🔄 Попытка {attempt}/{max_attempts} установить webhook: {webhook_url}")
-
-                current = await bot.get_webhook_info(request_timeout=15)
-                logger.info(f"Текущий webhook: {current.url or 'None'}")
-
-                await bot.set_webhook(
-                    url=webhook_url,
-                    secret_token=os.getenv("TELEGRAM_WEBHOOK_SECRET"),
-                    drop_pending_updates=True,
-                    allowed_updates=["message", "callback_query", "pre_checkout_query", "successful_payment"],
-                    request_timeout=30  # ← важно!
-                )
-                logger.info("✅ Webhook успешно установлен!")
-                return True
-
-            except Exception as e:
-                logger.error(f"❌ Ошибка {attempt}: {type(e).__name__} — {e}", exc_info=True)
-                if attempt == max_attempts:
-                    return False
-                await asyncio.sleep(5)
-
-        return False
+                await polling_task
+            except asyncio.CancelledError:
+                logger.info("✅ Polling остановлен")
 
     try:
-        logger.info("🔄 Starting Dishka container...")
+        logger.info("🔄 Запускаем Dishka container...")
 
         # Получаем зависимости из контейнера
         bot: Bot = await dishka_container.get(Bot)
@@ -73,28 +60,21 @@ async def lifespan(app: FastAPI):
 
         await dp.emit_startup()
 
-        # Удаляем вебхук перед запуском
-        await delete_webhook(bot)
+        # Запускаем polling в фоновой задаче
+        global polling_task
+        polling_task = asyncio.create_task(start_polling(bot, dp))
 
-        secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
-        if not secret:
-            raise ValueError("TELEGRAM_WEBHOOK_SECRET is not set in environment variables")
-
-        webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL") + f"/{secret}"
-
-        success = await set_webhook_with_retry(bot, webhook_url)
-        if not success:
-            raise RuntimeError("Failed to set Telegram webhook")
-        logger.info("✅ Application startup complete")
+        logger.info("✅ Приложение успешно запущено с polling'ом")
         yield
 
     except Exception as e:
-        logger.error(f"❌ Failed to set webhook: {e}")
+        logger.error(f"❌ Ошибка при запуске: {e}", exc_info=True)
         raise
     finally:
-        logger.info("🔄 Closing Dishka container...")
+        logger.info("🔄 Закрываем приложение...")
+        await stop_polling()
         await dishka_container.close()
-        logger.info("✅ Dishka container closed")
+        logger.info("✅ Приложение закрыто")
 
 
 def create_app() -> FastAPI:
@@ -105,7 +85,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="TraumaBot API",
-        description="API for TraumaBot Telegram bot and fastapi",
+        description="API for TraumaBot Telegram bot (polling mode)",
         version="1.0.0",
         lifespan=lifespan,
         docs_url="/docs" if docs_enabled else None,
@@ -115,15 +95,8 @@ def create_app() -> FastAPI:
     # Настраиваем Dishka
     setup_dishka(dishka_container, app)
 
-    app.include_router(webhooks_router, prefix="", tags=["webhooks"])
-
-    @app.get("/health", tags=["health"])
-    async def health_check():
-        return {
-            "status": "healthy",
-            "service": "trauma-bot-api",
-            "version": "1.0.0"
-        }
+    # Включаем маршрут для health check
+    app.include_router(health_router, tags=["health"])
 
     return app
 
@@ -137,7 +110,7 @@ if __name__ == "__main__":
     port = int(os.getenv("WEB_PORT", 8000))
     reload = os.getenv("ENVIRONMENT", "production") == "development"
 
-    logger.info(f"🚀 Starting TraumaBot API on {host}:{port}")
+    logger.info(f"🚀 Запускаем TraumaBot API на {host}:{port} (polling mode)")
 
     uvicorn.run(
         "asgi:app",
