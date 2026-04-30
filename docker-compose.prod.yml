@@ -85,6 +85,12 @@ services:
     networks:
       - traefik_network
       - default
+      -
+    extra_hosts:
+      - "api.telegram.org:149.154.167.220"
+      - "api.telegram.org:149.154.167.4"
+      - "api.telegram.org:149.154.167.5"
+
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -94,6 +100,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
   traefik:
     build:
       context: .
